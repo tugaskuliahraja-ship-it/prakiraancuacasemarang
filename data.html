@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Data Cuaca - WebGIS Semarang</title>
+
+    <!-- Font: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS Utama -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- CSS Tambahan Khusus Halaman Data -->
+    <style>
+        body { background-color: #f8fafc; } /* Warna latar yang lebih lembut untuk halaman baca */
+        .data-container { padding: 30px; max-width: 1100px; margin: 90px auto 40px auto; }
+        
+        .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header-action h2 { margin: 0; color: #1e293b; font-size: 24px; }
+        
+        .btn-print { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: background 0.3s; }
+        .btn-print:hover { background: #1d4ed8; }
+
+        .filter-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 25px; display: flex; gap: 15px; flex-wrap: wrap; border: 1px solid #e2e8f0; }
+        .filter-card select { flex: 1; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; font-size: 14px; outline: none; }
+        .filter-card select:disabled { background-color: #f1f5f9; cursor: not-allowed; }
+
+        .table-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; }
+        .table-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px; }
+        .table-header img { height: 60px; margin-bottom: 15px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e2e8f0; padding: 14px; text-align: left; font-size: 14px; }
+        th { background: #f8fafc; font-weight: 600; color: #475569; }
+        
+        .print-footer { margin-top: 40px; font-size: 12px; color: #64748b; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigasi Atas (Navbar Identik dengan index.html) -->
+    <nav class="top-navbar">
+        <div class="nav-left">
+            <div class="brand">
+                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG" class="brand-logo">
+                <div class="brand-text">
+                    <span class="brand-title">Prakiraan Cuaca</span>
+                    <span class="brand-subtitle">Kota Semarang</span>
+                </div>
+            </div>
+            
+            <!-- Pengaturan Tab (Peta Pasif, Riwayat Aktif) -->
+            <div class="nav-tabs">
+                <button class="nav-tab">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Overview
+                </button>
+                
+                <!-- Kembali ke halaman Peta -->
+                <button class="nav-tab" onclick="window.location.href='index.html'" style="cursor: pointer;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+                    Peta Cuaca
+                </button>
+                
+                <!-- Halaman Riwayat Menyala Aktif -->
+                <button class="nav-tab active">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Riwayat Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Tengah: Kolom pencarian dipertahankan tapi disembunyikan agar layout tidak bergeser -->
+        <div class="nav-center" style="visibility: hidden;">
+            <div class="search-bar">
+                <input type="text">
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <!-- Ikon Layer dan Legenda disembunyikan karena ini bukan halaman peta -->
+            <div style="visibility: hidden; display: flex;">
+                <button class="nav-icon-btn"><svg width="18" height="18"></svg></button>
+                <button class="nav-icon-btn"><svg width="18" height="18"></svg></button>
+            </div>
+            
+            <!-- Jam Realtime Dipertahankan -->
+            <div class="nav-clock">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span id="realtime-clock">--:-- WIB</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Kontainer Pangkalan Data -->
+    <div class="data-container">
+        
+        <div class="header-action">
+            <h2>Pangkalan Data Historis</h2>
+            <button id="btn-cetak-pdf" class="btn-print">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Cetak ke PDF
+            </button>
+        </div>
+
+        <!-- Filter Berjenjang (Drill-Down) -->
+        <div class="filter-card">
+            <select id="filter-wilayah">
+                <option value="KOTA_SMG">Wilayah: Rata-rata Kota Semarang</option>
+                <!-- Nanti akan diisi data Kecamatan/Kelurahan melalui JS -->
+            </select>
+            
+            <select id="filter-tahun">
+                <option value="">Pilih Tahun...</option>
+                <option value="2026">2026</option>
+            </select>
+            
+            <select id="filter-bulan" disabled>
+                <option value="">Pilih Bulan (Opsional)...</option>
+                <option value="01">Januari</option>
+                <option value="02">Februari</option>
+                <option value="03">Maret</option>
+                <!-- dst -->
+            </select>
+
+            <select id="filter-hari" disabled>
+                <option value="">Pilih Tanggal (Opsional)...</option>
+            </select>
+        </div>
+
+        <!-- Area Tabel yang Akan Dicetak menjadi PDF -->
+        <div class="table-card" id="area-cetak-pdf">
+            <div class="table-header">
+                <!-- Logo BMKG sebagai atribusi keamanan data -->
+                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG">
+                <h3 style="margin: 5px 0 10px 0;">LAPORAN RIWAYAT CUACA</h3>
+                <p id="label-lokasi" style="color: #64748b; margin: 0; font-weight: 500;">Lokasi: Rata-rata Kota Semarang</p>
+                <p id="label-waktu" style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Periode: Belum Dipilih</p>
+            </div>
+
+            <table id="tabel-cuaca">
+                <thead>
+                    <tr>
+                        <th width="25%">Waktu</th>
+                        <th width="25%">Kondisi Cuaca</th>
+                        <th width="16%">Suhu (°C)</th>
+                        <th width="17%">Kelembapan (%)</th>
+                        <th width="17%">Angin (km/jam)</th>
+                    </tr>
+                </thead>
+                <tbody id="isi-tabel">
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8; padding: 40px;">
+                            Silakan pilih tahun/bulan pada kotak filter di atas untuk memuat data riwayat.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="print-footer">
+                <div>Dicetak pada: <strong id="waktu-cetak">--/--/----</strong></div>
+                <div><strong>Sumber Data:</strong> Badan Meteorologi, Klimatologi, dan Geofisika (BMKG)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Panggil Library Eksternal -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Panggil logika utama halaman data -->
+    <script src="data.js"></script>
+
+    <!-- Script Jam Realtime & Tanggal Cetak -->
+    <script>
+        function updateClock() {
+            const now = new Date();
+            // Jam di pojok kanan atas
+            const timeString = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+            document.getElementById('realtime-clock').innerText = timeString + ' WIB';
+            
+            // Tanggal otomatis di bagian footer PDF
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('waktu-cetak').innerText = now.toLocaleDateString('id-ID', options) + " - " + timeString + " WIB";
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
+</body>
+</html>
