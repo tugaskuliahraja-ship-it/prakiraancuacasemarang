@@ -26,42 +26,89 @@ export default async function handler(req, res) {
         // AMBIL DATA CACHE DARI SUPABASE
         // ======================================================
 
-        const cacheResponse =
-            await fetch(
-                `${SUPABASE_URL}/rest/v1/cache_prakiraan_kelurahan?select=*`,
-                {
-                    headers: {
-                        "apikey":
-                            SUPABASE_KEY,
+        // ======================================================
+// AMBIL SELURUH DATA CACHE DENGAN PAGINATION
+// ======================================================
 
-                        "Authorization":
-                            `Bearer ${SUPABASE_KEY}`
-                    }
+const cacheData = [];
+
+const PAGE_SIZE = 1000;
+
+let offset = 0;
+
+
+while (true) {
+
+    const from =
+        offset;
+
+    const to =
+        offset + PAGE_SIZE - 1;
+
+
+    const cacheResponse =
+        await fetch(
+            `${SUPABASE_URL}/rest/v1/cache_prakiraan_kelurahan?select=*&order=id.asc`,
+            {
+                headers: {
+
+                    "apikey":
+                        SUPABASE_KEY,
+
+                    "Authorization":
+                        `Bearer ${SUPABASE_KEY}`,
+
+                    "Range":
+                        `${from}-${to}`
                 }
-            );
+            }
+        );
 
 
-        if (!cacheResponse.ok) {
+    if (!cacheResponse.ok) {
 
-            const errorText =
-                await cacheResponse.text();
+        const errorText =
+            await cacheResponse.text();
 
-            throw new Error(
-                `Gagal membaca cache (${cacheResponse.status}): ${errorText}`
-            );
-        }
-
-
-        const cacheData =
-            await cacheResponse.json();
+        throw new Error(
+            `Gagal membaca cache (${cacheResponse.status}): ${errorText}`
+        );
+    }
 
 
-        if (!Array.isArray(cacheData) || cacheData.length === 0) {
+    const pageData =
+        await cacheResponse.json();
 
-            throw new Error(
-                "Cache prakiraan kelurahan kosong"
-            );
-        }
+
+    if (!Array.isArray(pageData)) {
+
+        throw new Error(
+            "Format data cache tidak valid"
+        );
+    }
+
+
+    cacheData.push(
+        ...pageData
+    );
+
+
+    // Kalau kurang dari 1000 berarti sudah halaman terakhir
+    if (pageData.length < PAGE_SIZE) {
+        break;
+    }
+
+
+    offset += PAGE_SIZE;
+}
+
+
+if (cacheData.length === 0) {
+
+    throw new Error(
+        "Cache prakiraan kelurahan kosong"
+    );
+}
 
 
         // ======================================================
