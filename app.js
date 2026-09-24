@@ -1,36 +1,530 @@
+"use strict";
+
+// ======================================================
+// NOTIFIKASI APLIKASI
+// ======================================================
+
+function ensureAppNotificationStyles() {
+
+    if (
+        document.getElementById(
+            "app-toast-style"
+        )
+    ) {
+        return;
+    }
+
+    const style =
+        document.createElement(
+            "style"
+        );
+
+    style.id =
+        "app-toast-style";
+
+    style.textContent = `
+        #app-toast-container {
+            position: fixed;
+            top: 78px;
+            right: 18px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(360px, calc(100vw - 36px));
+            pointer-events: none;
+        }
+
+        .app-toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            background: rgba(255, 255, 255, 0.97);
+            color: #1e293b;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+            backdrop-filter: blur(12px);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 12px;
+            line-height: 1.45;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: opacity .22s ease, transform .22s ease;
+        }
+
+        html[data-theme="dark"] .app-toast {
+            background: rgba(15, 23, 42, 0.97);
+            color: #e5edf7;
+            border-color: #334155;
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.42);
+        }
+
+        .app-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .app-toast-icon {
+            flex: 0 0 auto;
+            font-size: 16px;
+            line-height: 1.2;
+        }
+
+        .app-toast-message {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .app-toast-success {
+            border-left: 4px solid #22c55e;
+        }
+
+        .app-toast-warning {
+            border-left: 4px solid #f59e0b;
+        }
+
+        .app-toast-error {
+            border-left: 4px solid #ef4444;
+        }
+
+        .app-toast-info {
+            border-left: 4px solid #3b82f6;
+        }
+    `;
+
+    document.head.appendChild(
+        style
+    );
+}
+
+
+function showAppNotification(
+    message,
+    type = "info",
+    duration = 4500
+) {
+
+    ensureAppNotificationStyles();
+
+    let container =
+        document.getElementById(
+            "app-toast-container"
+        );
+
+    if (!container) {
+
+        container =
+            document.createElement(
+                "div"
+            );
+
+        container.id =
+            "app-toast-container";
+
+        document.body.appendChild(
+            container
+        );
+    }
+
+    const icons = {
+        success: "✓",
+        warning: "⚠",
+        error: "✕",
+        info: "ℹ"
+    };
+
+    const normalizedType =
+        [
+            "success",
+            "warning",
+            "error",
+            "info"
+        ].includes(type)
+            ? type
+            : "info";
+
+    const toast =
+        document.createElement(
+            "div"
+        );
+
+    toast.className =
+        `app-toast app-toast-${normalizedType}`;
+
+    toast.innerHTML = `
+        <span class="app-toast-icon">
+            ${icons[normalizedType]}
+        </span>
+        <span class="app-toast-message"></span>
+    `;
+
+    toast.querySelector(
+        ".app-toast-message"
+    ).textContent =
+        String(message || "");
+
+    container.appendChild(
+        toast
+    );
+
+    requestAnimationFrame(
+        () => {
+            toast.classList.add(
+                "show"
+            );
+        }
+    );
+
+    const removeToast =
+        () => {
+
+            toast.classList.remove(
+                "show"
+            );
+
+            setTimeout(
+                () => {
+                    toast.remove();
+
+                    if (
+                        container &&
+                        container.childElementCount === 0
+                    ) {
+                        container.remove();
+                    }
+                },
+                220
+            );
+        };
+
+    setTimeout(
+        removeToast,
+        Math.max(
+            1200,
+            Number(duration) || 4500
+        )
+    );
+}
+
+
+window.showAppNotification =
+    showAppNotification;
+
+
+// Tangkap error JavaScript yang benar-benar tidak tertangani.
+window.addEventListener(
+    "error",
+    function(event) {
+
+        if (!event.error) {
+            return;
+        }
+
+        const message =
+            event.error?.message ||
+            event.message ||
+            "Terjadi kesalahan pada aplikasi.";
+
+        console.error(
+            "WebGIS error:",
+            event.error
+        );
+
+        showAppNotification(
+            `Terjadi kesalahan: ${message}`,
+            "error",
+            7000
+        );
+    }
+);
+
+
+window.addEventListener(
+    "unhandledrejection",
+    function(event) {
+
+        const reason =
+            event.reason;
+
+        const message =
+            reason?.message ||
+            String(reason || "Promise gagal dijalankan.");
+
+        console.error(
+            "Unhandled promise rejection:",
+            reason
+        );
+
+        showAppNotification(
+            `Proses gagal: ${message}`,
+            "error",
+            7000
+        );
+    }
+);
+
+
+// ======================================================
+// THEME FALLBACK
+// ======================================================
+// theme.js tetap menjadi pengatur utama. Bagian ini hanya
+// menjadi pengaman apabila theme.js terlambat / tidak termuat.
+
+function getCurrentWIBHour() {
+
+    const hourText =
+        new Intl.DateTimeFormat(
+            "en-GB",
+            {
+                timeZone:
+                    "Asia/Jakarta",
+
+                hour:
+                    "2-digit",
+
+                hourCycle:
+                    "h23"
+            }
+        ).format(
+            new Date()
+        );
+
+    return Number(
+        hourText
+    );
+}
+
+
+function getFallbackTheme() {
+
+    const hour =
+        getCurrentWIBHour();
+
+    return (
+        hour >= 18 ||
+        hour < 6
+    )
+        ? "dark"
+        : "light";
+}
+
+
+function syncFallbackTheme() {
+
+    const current =
+        document
+            .documentElement
+            .dataset
+            .theme;
+
+    if (
+        current === "light" ||
+        current === "dark"
+    ) {
+        return;
+    }
+
+    document
+        .documentElement
+        .dataset
+        .theme =
+            getFallbackTheme();
+}
+
+
+syncFallbackTheme();
+
+
 // ======================================================
 // INISIALISASI MAP
 // ======================================================
 
-const map = L.map("map", {
-    zoomControl: true
-}).setView([-7.005, 110.438], 11);
+const map =
+    L.map(
+        "map",
+        {
+            zoomControl:
+                false
+        }
+    )
+    .setView(
+        [
+            -7.005,
+            110.438
+        ],
+        11
+    );
+
+
+// Zoom dipindah ke kanan atas agar tidak tertutup
+// panel informasi cuaca di sisi kiri.
+L.control
+    .zoom({
+        position:
+            "topright"
+    })
+    .addTo(map);
 
 
 // ======================================================
 // BASEMAP
 // ======================================================
 
-const esriSatellite = L.tileLayer(
-    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-    {
-        attribution: "Tiles © Esri | Data Cuaca © BMKG",
-        maxZoom: 19
-    }
-);
+// OSM standar / light.
+const osmStandard =
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "© OpenStreetMap contributors | Data Cuaca © BMKG",
 
-const osmStandard = L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-        attribution: "© OpenStreetMap contributors",
-        maxZoom: 19
-    }
-);
+            maxZoom:
+                19,
+
+            className:
+                "osm-light-tiles"
+        }
+    );
+
+
+// OSM dark memakai tile OSM yang sama.
+// Efek gelap dikerjakan oleh CSS .osm-dark-tiles,
+// jadi TIDAK membutuhkan API key tambahan.
+const osmDark =
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            attribution:
+                "© OpenStreetMap contributors | Data Cuaca © BMKG",
+
+            maxZoom:
+                19,
+
+            className:
+                "osm-dark-tiles"
+        }
+    );
+
+
+// Esri Satellite tetap dipertahankan.
+const esriSatellite =
+    L.tileLayer(
+        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        {
+            attribution:
+                "Tiles © Esri | Data Cuaca © BMKG",
+
+            maxZoom:
+                19
+        }
+    );
+
+
+// auto = OSM Light/Dark mengikuti theme.
+// osm  = OSM standar terus.
+// esri = Esri Satellite.
+let currentBasemapMode =
+    "auto";
 
 let currentBasemap =
-    esriSatellite;
+    null;
 
-currentBasemap.addTo(map);
+
+function getAutomaticBasemap() {
+
+    const isDark =
+        document
+            .documentElement
+            .dataset
+            .theme ===
+        "dark";
+
+    return isDark
+        ? osmDark
+        : osmStandard;
+}
+
+
+function applyBasemap() {
+
+    let nextBasemap;
+
+    if (
+        currentBasemapMode ===
+        "esri"
+    ) {
+
+        nextBasemap =
+            esriSatellite;
+
+    } else if (
+        currentBasemapMode ===
+        "osm"
+    ) {
+
+        nextBasemap =
+            osmStandard;
+
+    } else {
+
+        nextBasemap =
+            getAutomaticBasemap();
+    }
+
+    if (
+        currentBasemap ===
+            nextBasemap &&
+        currentBasemap &&
+        map.hasLayer(
+            currentBasemap
+        )
+    ) {
+        return;
+    }
+
+    if (
+        currentBasemap &&
+        map.hasLayer(
+            currentBasemap
+        )
+    ) {
+
+        map.removeLayer(
+            currentBasemap
+        );
+    }
+
+    currentBasemap =
+        nextBasemap;
+
+    currentBasemap
+        .addTo(map);
+}
+
+
+// Default basemap saat halaman dibuka.
+applyBasemap();
+
+
+// Bila theme.js berganti dari light ↔ dark,
+// basemap hanya ikut berubah jika mode AUTO.
+window.addEventListener(
+    "app-theme-changed",
+    function() {
+
+        if (
+            currentBasemapMode ===
+            "auto"
+        ) {
+
+            applyBasemap();
+        }
+    }
+);
 
 
 // ======================================================
@@ -40,12 +534,108 @@ currentBasemap.addTo(map);
 let layerKecamatan;
 let layerKelurahan;
 
-// Menyimpan status pilihan menu navbar (Kecamatan atau Kelurahan)
 let currentAdminLevel =
     "kecamatan";
 
-const labelKecamatanLayer = L.layerGroup();
-const labelKelurahanLayer = L.layerGroup();
+const labelKecamatanLayer =
+    L.layerGroup();
+
+const labelKelurahanLayer =
+    L.layerGroup();
+
+
+// ======================================================
+// VISIBILITAS LABEL KELURAHAN BERDASARKAN ZOOM
+// ======================================================
+
+// Label dan icon 177 kelurahan baru muncul ketika
+// peta cukup dekat agar layar tidak penuh / bertumpuk.
+const KELURAHAN_LABEL_MIN_ZOOM =
+    14;
+
+
+function updateLabelVisibility() {
+
+    const zoom =
+        map.getZoom();
+
+    // MODE KECAMATAN
+    if (
+        currentAdminLevel ===
+        "kecamatan"
+    ) {
+
+        if (
+            map.hasLayer(
+                labelKelurahanLayer
+            )
+        ) {
+
+            map.removeLayer(
+                labelKelurahanLayer
+            );
+        }
+
+        if (
+            !map.hasLayer(
+                labelKecamatanLayer
+            )
+        ) {
+
+            labelKecamatanLayer
+                .addTo(map);
+        }
+
+        return;
+    }
+
+    // MODE KELURAHAN
+    if (
+        map.hasLayer(
+            labelKecamatanLayer
+        )
+    ) {
+
+        map.removeLayer(
+            labelKecamatanLayer
+        );
+    }
+
+    if (
+        zoom >=
+        KELURAHAN_LABEL_MIN_ZOOM
+    ) {
+
+        if (
+            !map.hasLayer(
+                labelKelurahanLayer
+            )
+        ) {
+
+            labelKelurahanLayer
+                .addTo(map);
+        }
+
+    } else {
+
+        if (
+            map.hasLayer(
+                labelKelurahanLayer
+            )
+        ) {
+
+            map.removeLayer(
+                labelKelurahanLayer
+            );
+        }
+    }
+}
+
+
+map.on(
+    "zoomend",
+    updateLabelVisibility
+);
 
 
 // ======================================================
@@ -187,57 +777,279 @@ function getWeatherColor(weatherDesc) {
 
 
 // ======================================================
-// IKON CUACA
+// IKON CUACA SIANG / MALAM
 // ======================================================
 
-function getWeatherIcon(weatherDesc) {
-
-    const weather =
-        String(weatherDesc || "")
-            .toLowerCase();
+function getWIBHourFromDate(
+    date
+) {
 
     if (
-        weather.includes("petir") ||
-        weather.includes("kilat")
+        !(date instanceof Date) ||
+        Number.isNaN(
+            date.getTime()
+        )
     ) {
+        return null;
+    }
+
+    const hourText =
+        new Intl.DateTimeFormat(
+            "en-GB",
+            {
+                timeZone:
+                    "Asia/Jakarta",
+
+                hour:
+                    "2-digit",
+
+                hourCycle:
+                    "h23"
+            }
+        ).format(
+            date
+        );
+
+    return Number(
+        hourText
+    );
+}
+
+
+function getForecastHour(
+    weatherTime = null
+) {
+
+    let value =
+        weatherTime;
+
+    // Jika yang dikirim adalah object item BMKG,
+    // prioritaskan local_datetime karena sudah berupa waktu lokal.
+    if (
+        value &&
+        typeof value ===
+            "object" &&
+        !(value instanceof Date)
+    ) {
+
+        value =
+            value.local_datetime ||
+            value._timeline_time ||
+            value.datetime ||
+            value.utc_datetime ||
+            null;
+    }
+
+    if (
+        value instanceof Date
+    ) {
+
+        return getWIBHourFromDate(
+            value
+        );
+    }
+
+    if (
+        typeof value ===
+            "string" &&
+        value.trim()
+    ) {
+
+        const clean =
+            value.trim();
+
+        // ISO dengan zona waktu (Z / +07:00 / dll)
+        // harus dikonversi ke WIB lebih dulu.
+        if (
+            /Z$/i.test(clean) ||
+            /[+-]\d{2}:\d{2}$/.test(
+                clean
+            )
+        ) {
+
+            const parsed =
+                new Date(
+                    clean
+                );
+
+            const hour =
+                getWIBHourFromDate(
+                    parsed
+                );
+
+            if (
+                hour !== null
+            ) {
+                return hour;
+            }
+        }
+
+        // Format BMKG lokal:
+        // YYYY-MM-DD HH:mm:ss
+        // atau YYYY-MM-DDTHH:mm:ss tanpa zona.
+        const match =
+            clean.match(
+                /(?:T|\s)(\d{2}):/
+            );
+
+        if (match) {
+
+            return Number(
+                match[1]
+            );
+        }
+    }
+
+    // Fallback ke waktu timeline yang sedang dipilih.
+    if (
+        weatherTime !==
+            selectedForecastTime &&
+        selectedForecastTime
+    ) {
+
+        const selectedHour =
+            getForecastHour(
+                selectedForecastTime
+            );
+
+        if (
+            selectedHour !==
+            null
+        ) {
+
+            return selectedHour;
+        }
+    }
+
+    // Fallback terakhir: jam sekarang di WIB.
+    return getCurrentWIBHour();
+}
+
+
+function isNightWeatherTime(
+    weatherTime = null
+) {
+
+    const hour =
+        getForecastHour(
+            weatherTime
+        );
+
+    return (
+        hour >= 18 ||
+        hour < 6
+    );
+}
+
+
+function getWeatherIcon(
+    weatherDesc,
+    weatherTime = null
+) {
+
+    const weather =
+        String(
+            weatherDesc || ""
+        )
+        .toLowerCase();
+
+    const isNight =
+        isNightWeatherTime(
+            weatherTime
+        );
+
+    if (
+        weather.includes(
+            "petir"
+        ) ||
+        weather.includes(
+            "kilat"
+        )
+    ) {
+
         return "⛈️";
     }
 
-    if (weather.includes("hujan lebat")) {
+    if (
+        weather.includes(
+            "hujan lebat"
+        )
+    ) {
+
         return "🌧️";
     }
 
-    if (weather.includes("hujan")) {
-        return "🌦️";
-    }
+    if (
+        weather.includes(
+            "hujan"
+        )
+    ) {
 
-    if (weather.includes("cerah berawan")) {
-        return "🌤️";
+        return isNight
+            ? "🌧️"
+            : "🌦️";
     }
 
     if (
-        weather.includes("mendung") ||
-        weather.includes("berawan tebal")
+        weather.includes(
+            "cerah berawan"
+        )
     ) {
-        return "☁️";
-    }
 
-    if (weather.includes("berawan")) {
-        return "☁️";
-    }
-
-    if (weather.includes("cerah")) {
-        return "☀️";
+        return isNight
+            ? "🌙☁️"
+            : "🌤️";
     }
 
     if (
-        weather.includes("kabut") ||
-        weather.includes("asap")
+        weather.includes(
+            "mendung"
+        ) ||
+        weather.includes(
+            "berawan tebal"
+        )
     ) {
+
+        return "☁️";
+    }
+
+    if (
+        weather.includes(
+            "berawan"
+        )
+    ) {
+
+        return isNight
+            ? "☁️"
+            : "⛅";
+    }
+
+    if (
+        weather.includes(
+            "cerah"
+        )
+    ) {
+
+        return isNight
+            ? "🌙"
+            : "☀️";
+    }
+
+    if (
+        weather.includes(
+            "kabut"
+        ) ||
+        weather.includes(
+            "asap"
+        )
+    ) {
+
         return "🌫️";
     }
 
-    return "🌤️";
+    return isNight
+        ? "🌙"
+        : "🌤️";
 }
 
 
@@ -854,7 +1666,7 @@ function updateTimelineDisplay() {
             });
         }
 
-        let icon = getWeatherIcon(sampleDesc);
+        let icon = getWeatherIcon(sampleDesc, time);
         let temp = tempCount > 0 ? Math.round(tempSum / tempCount) : "--";
 
         const box = document.createElement("div");
@@ -1037,7 +1849,7 @@ function get3DayPopupHTML(adm4) {
             items[Math.floor(items.length / 2)] || items[0];
 
         const icon =
-            getWeatherIcon(midItem.weather_desc);
+            getWeatherIcon(midItem.weather_desc, midItem);
 
         // Cari Suhu Minimum dan Maksimum Harian
         const temps = items.map(i => Number(i.t)).filter(t => !isNaN(t));
@@ -1062,7 +1874,7 @@ function get3DayPopupHTML(adm4) {
     });
 
     return `
-        <div style="font-size:12px; font-weight:800; color:#1E293B; margin-top:8px;">
+        <div style="font-size:12px; font-weight:800; color:var(--text, #1E293B); margin-top:8px;">
             Prakiraan 3 Hari Ke Depan
         </div>
         <div class="popup-forecast-container">
@@ -1076,7 +1888,7 @@ function get3DayPopupHTML(adm4) {
 // ======================================================
 
 function createKelurahanWeatherLabel(layer, namaKel, weather) {
-    let icon = getWeatherIcon(weather.weather_desc);
+    let icon = getWeatherIcon(weather.weather_desc, weather);
     let weatherClass = getWeatherAnimationClass(weather.weather_desc);
 
     const center = getPolygonCenter(layer);
@@ -1172,7 +1984,7 @@ function updateKelurahanWeather(layer, weather) {
     const namaKec = props.Kecamatan || "-";
     const adm4 = String(props.adm4 || "").trim();
 
-    const icon = getWeatherIcon(weather.weather_desc);
+    const icon = getWeatherIcon(weather.weather_desc, weather);
     const color = getWeatherColor(weather.weather_desc);
 
     layer._weatherColor = color;
@@ -1190,30 +2002,30 @@ function updateKelurahanWeather(layer, weather) {
 
     layer.bindPopup(`
         <div style="min-width:240px;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid var(--theme-border, #E2E8F0); padding-bottom:10px;">
                 <div style="font-size:28px;">${icon}</div>
                 <div>
-                    <div style="font-size:16px; font-weight:700; color:#1E293B; line-height:1.2;">${namaKel}</div>
-                    <div style="font-size:12px; color:#64748B;">Kec. ${namaKec}</div>
+                    <div style="font-size:16px; font-weight:700; color:var(--text, #1E293B); line-height:1.2;">${namaKel}</div>
+                    <div style="font-size:12px; color:var(--text-sec, #64748B);">Kec. ${namaKec}</div>
                 </div>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
-                <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                    <div style="font-size:10px; color:#64748B;">Kondisi</div>
-                    <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${weather.weather_desc}</div>
+                <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                    <div style="font-size:10px; color:var(--text-sec, #64748B);">Kondisi</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${weather.weather_desc}</div>
                 </div>
-                <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                    <div style="font-size:10px; color:#64748B;">Suhu</div>
-                    <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${weather.t ?? "-"}°C</div>
+                <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                    <div style="font-size:10px; color:var(--text-sec, #64748B);">Suhu</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${weather.t ?? "-"}°C</div>
                 </div>
-                <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                    <div style="font-size:10px; color:#64748B;">Kelembapan</div>
-                    <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${weather.hu ?? "-"}%</div>
+                <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                    <div style="font-size:10px; color:var(--text-sec, #64748B);">Kelembapan</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${weather.hu ?? "-"}%</div>
                 </div>
-                <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                    <div style="font-size:10px; color:#64748B;">Kec. Angin</div>
-                    <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${weather.ws ?? "-"} km/j</div>
+                <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                    <div style="font-size:10px; color:var(--text-sec, #64748B);">Kec. Angin</div>
+                    <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${weather.ws ?? "-"} km/j</div>
                 </div>
             </div>
 
@@ -1337,7 +2149,7 @@ function createKecamatanWeatherLabel(
 ) {
 
     let icon = 
-        getWeatherIcon(aggregate.weather_desc);
+        getWeatherIcon(aggregate.weather_desc, selectedForecastTime);
     
     let weatherClass = 
         getWeatherAnimationClass(aggregate.weather_desc);
@@ -1412,9 +2224,9 @@ function setKecamatanNoData(
 
     layer.bindPopup(`
         <div style="min-width:210px;">
-            <b style="font-size:15px; color:#1E293B;">Kecamatan ${nama}</b>
-            <hr style="border:0; border-top:1px solid #E2E8F0; margin:8px 0;">
-            <span style="color:#64748B; font-size:12px;">Data tidak tersedia dalam toleransi ±60 menit.</span>
+            <b style="font-size:15px; color:var(--text, #1E293B);">Kecamatan ${nama}</b>
+            <hr style="border:0; border-top:1px solid var(--theme-border, #E2E8F0); margin:8px 0;">
+            <span style="color:var(--text-sec, #64748B); font-size:12px;">Data tidak tersedia dalam toleransi ±60 menit.</span>
         </div>
     `);
 }
@@ -1484,7 +2296,7 @@ function updateKecamatanWeather(
                     getWeatherColor(aggregate.weather_desc);
                 
                 const icon = 
-                    getWeatherIcon(aggregate.weather_desc);
+                    getWeatherIcon(aggregate.weather_desc, selectedForecastTime);
 
                 layer._weatherColor = color;
                 
@@ -1511,30 +2323,30 @@ function updateKecamatanWeather(
 
                 layer.bindPopup(`
                     <div style="min-width:240px;">
-                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px; border-bottom:1px solid var(--theme-border, #E2E8F0); padding-bottom:10px;">
                             <div style="font-size:28px;">${icon}</div>
                             <div>
-                                <div style="font-size:16px; font-weight:700; color:#1E293B; line-height:1.2;">Kecamatan ${nama}</div>
-                                <div style="font-size:12px; color:#64748B;">Kota Semarang</div>
+                                <div style="font-size:16px; font-weight:700; color:var(--text, #1E293B); line-height:1.2;">Kecamatan ${nama}</div>
+                                <div style="font-size:12px; color:var(--text-sec, #64748B);">Kota Semarang</div>
                             </div>
                         </div>
                         
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:16px;">
-                            <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                                <div style="font-size:10px; color:#64748B;">Kondisi</div>
-                                <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${aggregate.weather_desc}</div>
+                            <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                                <div style="font-size:10px; color:var(--text-sec, #64748B);">Kondisi</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${aggregate.weather_desc}</div>
                             </div>
-                            <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                                <div style="font-size:10px; color:#64748B;">Suhu</div>
-                                <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${suhuText}</div>
+                            <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                                <div style="font-size:10px; color:var(--text-sec, #64748B);">Suhu</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${suhuText}</div>
                             </div>
-                            <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                                <div style="font-size:10px; color:#64748B;">Kelembapan</div>
-                                <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${aggregate.hu}%</div>
+                            <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                                <div style="font-size:10px; color:var(--text-sec, #64748B);">Kelembapan</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${aggregate.hu}%</div>
                             </div>
-                            <div style="background:#F5F9FC; border:1px solid #E2E8F0; padding:8px; border-radius:8px;">
-                                <div style="font-size:10px; color:#64748B;">Kec. Angin</div>
-                                <div style="font-size:13px; font-weight:700; color:#1E293B; margin-top:2px;">${aggregate.ws} km/j</div>
+                            <div style="background:var(--theme-soft, #F5F9FC); border:1px solid var(--theme-border, #E2E8F0); padding:8px; border-radius:8px;">
+                                <div style="font-size:10px; color:var(--text-sec, #64748B);">Kec. Angin</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--text, #1E293B); margin-top:2px;">${aggregate.ws} km/j</div>
                             </div>
                         </div>
 
@@ -1799,7 +2611,8 @@ function get3DayForecastGlobal() {
 
                 icon:
                     getWeatherIcon(
-                        midItem.weather_desc
+                        midItem.weather_desc,
+                        midItem
                     ),
 
                 temp:
@@ -1935,7 +2748,10 @@ function updateBMKGInfoPanel() {
     document.getElementById(
         "city-desc"
     ).textContent =
-        getWeatherIcon(domDesc) + " " + domDesc;
+        getWeatherIcon(
+            domDesc,
+            selectedForecastTime || activeWeatherData[0]
+        ) + " " + domDesc;
 
     document.getElementById(
         "city-humidity"
@@ -2107,6 +2923,9 @@ async function loadAllKelurahanWeather() {
     loadedWeather =
         0;
 
+    let failedWeather =
+        0;
+
     const loadingBox =
         document.getElementById(
             "weather-loading"
@@ -2217,6 +3036,8 @@ async function loadAllKelurahanWeather() {
 
         catch (error) {
 
+            failedWeather++;
+
             console.warn(
                 "Gagal:",
                 item.layer.feature
@@ -2300,93 +3121,60 @@ async function loadAllKelurahanWeather() {
     updateBMKGInfoPanel();
 
     if (loadingBox) {
-        loadingBox.innerHTML = "Data BMKG selesai dimuat ✓";
-        setTimeout(function() {
-            loadingBox.style.display = "none";
-        }, 2500);
+
+        loadingBox.textContent =
+            failedWeather === 0
+                ? "Data BMKG selesai dimuat ✓"
+                : `Data selesai: ${totalWeather - failedWeather}/${totalWeather} berhasil`;
+
+        setTimeout(
+            function() {
+                loadingBox.style.display =
+                    "none";
+            },
+            2500
+        );
     }
-    console.log("Seluruh proses cuaca selesai.");
+
+    if (
+        failedWeather === 0
+    ) {
+
+        showAppNotification(
+            `Data BMKG berhasil dimuat untuk ${totalWeather} kelurahan.`,
+            "success",
+            3200
+        );
+
+    } else {
+
+        showAppNotification(
+            `${totalWeather - failedWeather}/${totalWeather} data kelurahan berhasil dimuat. ${failedWeather} request gagal dan dapat dicoba lagi saat refresh berikutnya.`,
+            "warning",
+            6500
+        );
+    }
+
+    console.log(
+        "Seluruh proses cuaca selesai.",
+        {
+            total:
+                totalWeather,
+
+            berhasil:
+                totalWeather - failedWeather,
+
+            gagal:
+                failedWeather
+        }
+    );
 
     // ==================================================
-    // REKAP & SIMPAN 3 HARI KE SUPABASE (KOTA + 16 KECAMATAN)
+    // PENYIMPANAN HISTORIS
     // ==================================================
-    let keranjangSupabase = [];
-
-    // Loop semua pias waktu (per jam) yang ada di timeline BMKG
-    forecastTimes.forEach(waktuTimeline => {
-        let tempSumKota = 0, humSumKota = 0, windSumKota = 0, countKota = 0;
-        let kondisiKotaCount = {};
-        let dataKecamatanTemp = {};
-
-        // Ekstrak data 177 Kelurahan pada jam tersebut
-        layerKelurahan.eachLayer(layer => {
-            const adm4 = layer.feature.properties.adm4;
-            const namaKecAsli = layer.feature.properties.Kecamatan;
-            
-            // Ubah "Semarang Tengah" menjadi format "KEC_SEMARANG_TENGAH"
-            const kodeKec = "KEC_" + namaKecAsli.toUpperCase().replace(/\s+/g, '_');
-            
-            const dataRaw = weatherCache.get(adm4);
-            if (dataRaw) {
-                const w = getForecastByTime(dataRaw, waktuTimeline);
-                if (w && w.t !== undefined && !isNaN(Number(w.t))) {
-                    
-                    // Tabung untuk rata-rata KOTA
-                    tempSumKota += Number(w.t);
-                    humSumKota += Number(w.hu);
-                    windSumKota += Number(w.ws);
-                    countKota++;
-                    kondisiKotaCount[w.weather_desc] = (kondisiKotaCount[w.weather_desc] || 0) + 1;
-
-                    // Tabung untuk rata-rata KECAMATAN
-                    if (!dataKecamatanTemp[kodeKec]) {
-                        dataKecamatanTemp[kodeKec] = { t: 0, hu: 0, ws: 0, count: 0, descCount: {} };
-                    }
-                    dataKecamatanTemp[kodeKec].t += Number(w.t);
-                    dataKecamatanTemp[kodeKec].hu += Number(w.hu);
-                    dataKecamatanTemp[kodeKec].ws += Number(w.ws);
-                    dataKecamatanTemp[kodeKec].count++;
-                    dataKecamatanTemp[kodeKec].descCount[w.weather_desc] = (dataKecamatanTemp[kodeKec].descCount[w.weather_desc] || 0) + 1;
-                }
-            }
-        });
-
-        // Format waktu menjadi standar ISO untuk Supabase
-        const waktuISO = parseLocalDateTime(waktuTimeline).toISOString();
-
-        // 1. Bungkus Hasil KOTA SEMARANG
-        if (countKota > 0) {
-            const domDescKota = Object.keys(kondisiKotaCount).reduce((a, b) => kondisiKotaCount[a] > kondisiKotaCount[b] ? a : b);
-            keranjangSupabase.push({
-                kode_wilayah: 'KOTA_SMG',
-                waktu: waktuISO,
-                suhu: Math.round(tempSumKota / countKota),
-                kelembapan: Math.round(humSumKota / countKota),
-                angin: Math.round(windSumKota / countKota),
-                kondisi_cuaca: domDescKota
-            });
-        }
-
-        // 2. Bungkus Hasil 16 KECAMATAN
-        for (let kodeKec in dataKecamatanTemp) {
-            const k = dataKecamatanTemp[kodeKec];
-            if (k.count > 0) {
-                const domDescKec = Object.keys(k.descCount).reduce((a, b) => k.descCount[a] > k.descCount[b] ? a : b);
-                keranjangSupabase.push({
-                    kode_wilayah: kodeKec,
-                    waktu: waktuISO,
-                    suhu: Math.round(k.t / k.count),
-                    kelembapan: Math.round(k.hu / k.count),
-                    angin: Math.round(k.ws / k.count),
-                    kondisi_cuaca: domDescKec
-                });
-            }
-        }
-    });
-
-    // TEMBAKKAN KE SUPABASE SEKALIGUS
-    // Penyimpanan historis sekarang dilakukan otomatis oleh backend Vercel.
-// simpanMassalKeSupabase(keranjangSupabase);
+    // Tidak lagi dilakukan dari browser.
+    // Arsip prakiraan ditangani otomatis oleh backend Vercel
+    // melalui auto-archive.js + aggregate-weather.js.
 
 } // <-- Ini adalah kurung penutup fungsi utama loadAllKelurahanWeather
 
@@ -2544,6 +3332,8 @@ fetch(
     );
 
     setupLayerControl();
+
+    updateLabelVisibility();
 })
 
 .catch(error => {
@@ -2551,6 +3341,12 @@ fetch(
     console.error(
         "Error Kecamatan:",
         error
+    );
+
+    showAppNotification(
+        `Gagal memuat batas Kecamatan: ${error.message}`,
+        "error",
+        7000
     );
 });
 
@@ -2670,6 +3466,8 @@ fetch(
 
     setupLayerControl();
 
+    updateLabelVisibility();
+
     loadAllKelurahanWeather();
 })
 
@@ -2679,91 +3477,191 @@ fetch(
         "Error Kelurahan:",
         error
     );
+
+    showAppNotification(
+        `Gagal memuat batas Kelurahan: ${error.message}`,
+        "error",
+        7000
+    );
 });
 
 
 // ======================================================
-// KONTROL NAVBAR (PILIHAN BASEMAP & TINGKAT WILAYAH)
+// KONTROL NAVBAR (BASEMAP & TINGKAT WILAYAH)
 // ======================================================
 
-// 1. Logika untuk mengubah Basemap
+
+// ======================================================
+// 1. BASEMAP
+// ======================================================
+
 document
-    .querySelectorAll('input[name="basemap"]')
-    .forEach(radio => {
+    .querySelectorAll(
+        'input[name="basemap"]'
+    )
+    .forEach(
+        radio => {
 
-        radio.addEventListener(
-            'change',
-            (e) => {
+            radio.addEventListener(
+                "change",
+                function(event) {
 
-                map.removeLayer(
-                    currentBasemap
-                );
+                    const value =
+                        event
+                            .target
+                            .value;
 
-                currentBasemap =
-                    e.target.value === 'esri'
-                        ? esriSatellite
-                        : osmStandard;
+                    if (
+                        ![
+                            "auto",
+                            "osm",
+                            "esri"
+                        ].includes(value)
+                    ) {
 
-                currentBasemap.addTo(map);
-            }
-        );
-    });
+                        console.warn(
+                            "Basemap tidak dikenal:",
+                            value
+                        );
 
-
-// 2. Logika untuk mengubah Layer Peta (Kecamatan / Kelurahan)
-document
-    .querySelectorAll('input[name="admin_level"]')
-    .forEach(radio => {
-
-        radio.addEventListener(
-            'change',
-            (e) => {
-
-                currentAdminLevel =
-                    e.target.value;
-
-                if (
-                    currentAdminLevel === 'kecamatan'
-                ) {
-
-                    if (layerKelurahan) {
-                        map.removeLayer(layerKelurahan);
-                    }
-                    if (labelKelurahanLayer) {
-                        map.removeLayer(labelKelurahanLayer);
+                        return;
                     }
 
-                    if (layerKecamatan) {
-                        layerKecamatan.addTo(map);
-                    }
-                    if (labelKecamatanLayer) {
-                        labelKecamatanLayer.addTo(map);
-                    }
+                    currentBasemapMode =
+                        value;
 
-                } else {
-
-                    if (layerKecamatan) {
-                        map.removeLayer(layerKecamatan);
-                    }
-                    if (labelKecamatanLayer) {
-                        map.removeLayer(labelKecamatanLayer);
-                    }
-
-                    if (layerKelurahan) {
-                        layerKelurahan.addTo(map);
-                    }
-                    if (labelKelurahanLayer) {
-                        labelKelurahanLayer.addTo(map);
-                    }
+                    applyBasemap();
                 }
+            );
+        }
+    );
 
-                updateMapForSelectedTime();
-            }
-        );
-    });
 
-// (Fungsi setupLayerControl lama yang dipanggil di akhir fetch bisa dibiarkan kosong agar tidak error)
-function setupLayerControl() {}
+// ======================================================
+// 2. KECAMATAN / KELURAHAN
+// ======================================================
+
+document
+    .querySelectorAll(
+        'input[name="admin_level"]'
+    )
+    .forEach(
+        radio => {
+
+            radio.addEventListener(
+                "change",
+                function(event) {
+
+                    const value =
+                        event
+                            .target
+                            .value;
+
+                    if (
+                        ![
+                            "kecamatan",
+                            "kelurahan"
+                        ].includes(value)
+                    ) {
+
+                        console.warn(
+                            "Tingkat administrasi tidak dikenal:",
+                            value
+                        );
+
+                        return;
+                    }
+
+                    currentAdminLevel =
+                        value;
+
+
+                    // ------------------------------------------
+                    // MODE KECAMATAN
+                    // ------------------------------------------
+
+                    if (
+                        currentAdminLevel ===
+                        "kecamatan"
+                    ) {
+
+                        if (
+                            layerKelurahan &&
+                            map.hasLayer(
+                                layerKelurahan
+                            )
+                        ) {
+
+                            map.removeLayer(
+                                layerKelurahan
+                            );
+                        }
+
+                        if (
+                            layerKecamatan &&
+                            !map.hasLayer(
+                                layerKecamatan
+                            )
+                        ) {
+
+                            layerKecamatan
+                                .addTo(map);
+                        }
+                    }
+
+
+                    // ------------------------------------------
+                    // MODE KELURAHAN
+                    // ------------------------------------------
+
+                    else {
+
+                        if (
+                            layerKecamatan &&
+                            map.hasLayer(
+                                layerKecamatan
+                            )
+                        ) {
+
+                            map.removeLayer(
+                                layerKecamatan
+                            );
+                        }
+
+                        if (
+                            layerKelurahan &&
+                            !map.hasLayer(
+                                layerKelurahan
+                            )
+                        ) {
+
+                            layerKelurahan
+                                .addTo(map);
+                        }
+                    }
+
+
+                    // Icon + nama kelurahan hanya muncul
+                    // pada zoom yang cukup dekat.
+                    updateLabelVisibility();
+
+
+                    // Update warna, popup, icon, panel kota
+                    // sesuai waktu timeline saat ini.
+                    updateMapForSelectedTime();
+                }
+            );
+        }
+    );
+
+
+// Fungsi ini tetap dipertahankan karena dipanggil setelah
+// masing-masing GeoJSON selesai dimuat.
+function setupLayerControl() {
+
+    updateLabelVisibility();
+}
+
 
 // ======================================================
 // KONTROL HARI TIMELINE
@@ -3156,96 +4054,21 @@ if (searchInput) {
                     foundLayer.openPopup();
                 }, 300);
             } else {
-                alert("Wilayah '" + this.value + "' tidak ditemukan pada data " + currentAdminLevel + " yang sedang aktif.");
+
+                showAppNotification(
+                    `Wilayah "${this.value}" tidak ditemukan pada layer ${currentAdminLevel} yang sedang aktif.`,
+                    "warning",
+                    4500
+                );
             }
         }
     });
 }
 
 // ======================================================
-// SIMPAN KE SUPABASE (METODE UPSERT)
+// CATATAN ARSIP HISTORIS
 // ======================================================
-async function simpanOtomatisKeSupabase() {
-    try {
-        const suhuTeks = document.getElementById("city-temp").textContent; 
-        const humTeks = document.getElementById("city-humidity").textContent; 
-        const windTeks = document.getElementById("city-wind").textContent; 
-        const descTeks = document.getElementById("city-desc").textContent; 
-        
-        const suhu = parseFloat(suhuTeks) || 0;
-        const kelembapan = parseFloat(humTeks) || 0;
-        const angin = parseFloat(windTeks) || 0;
-        const kondisi = descTeks.replace(/[^a-zA-Z\s]/g, '').trim() || "Tidak diketahui";
+// Penulisan ke Supabase dari browser sengaja dihapus.
+// Penyimpanan historis dilakukan oleh backend Vercel agar
+// tidak tergantung pada ada/tidaknya pengunjung WebGIS.
 
-        if (suhu === 0 || isNaN(suhu)) {
-            console.log("Data cuaca kosong, batal menyimpan.");
-            return;
-        }
-
-        // Bulatkan waktu ke menit 00 agar Supabase mendeteksi jam yang sama untuk ditimpa
-        let waktuAktual = new Date();
-        waktuAktual.setMinutes(0, 0, 0); 
-
-        const payload = {
-            kode_wilayah: 'KOTA_SMG',
-            waktu: waktuAktual.toISOString(),
-            suhu: suhu,
-            kelembapan: kelembapan,
-            angin: angin,
-            kondisi_cuaca: kondisi
-        };
-
-        const SUPABASE_URL = 'https://malpetbethrghgaqvgnf.supabase.co/rest/v1/riwayat_cuaca';
-        const SUPABASE_KEY = 'sb_publishable_T7nqycPtPHpPnjR4hOQ24w_X7XlCIiL';
-
-        const responSupabase = await fetch(SUPABASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                // Instruksi menimpa data jika waktu (jam) sama
-                'Prefer': 'resolution=merge-duplicates' 
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (responSupabase.ok) {
-            console.log("✅ Data Kota Semarang berhasil di-Upsert ke Supabase!");
-        }
-    } catch (error) {
-        console.error("❌ Gagal menyimpan ke Supabase:", error);
-    }
-}
-
-// ======================================================
-// SIMPAN MASSAL KE SUPABASE (KOTA & KECAMATAN)
-// ======================================================
-async function simpanMassalKeSupabase(semuaData) {
-    if (!semuaData || semuaData.length === 0) return;
-    console.log(`Mencoba mengirim ${semuaData.length} baris data ke Supabase...`);
-
-    const SUPABASE_URL = 'https://malpetbethrghgaqvgnf.supabase.co/rest/v1/riwayat_cuaca';
-    const SUPABASE_KEY = 'sb_publishable_T7nqycPtPHpPnjR4hOQ24w_X7XlCIiL';
-
-    try {
-        const responSupabase = await fetch(SUPABASE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Prefer': 'resolution=merge-duplicates' 
-            },
-            body: JSON.stringify(semuaData) 
-        });
-
-        if (responSupabase.ok) {
-            console.log(`✅ Berhasil menyimpan seluruh data cuaca ke Supabase!`);
-        } else {
-            console.error("❌ Gagal menyimpan:", await responSupabase.text());
-        }
-    } catch (error) {
-        console.error("❌ Kesalahan jaringan saat menyimpan:", error);
-    }
-}
