@@ -1,0 +1,20 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "functions": {
+    "api/auto-archive.js": {
+      "maxDuration": 300
+    },
+
+    "api/aggregate-weather.js": {
+      "maxDuration": 60
+    }
+  },
+
+  "crons": [
+    {
+      "path": "/api/auto-archive",
+      "schedule": "0 14 * * *"
+    }
+  ]
+}
