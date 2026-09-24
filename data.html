@@ -15,11 +15,35 @@
 
     <!-- CSS Tambahan Khusus Halaman Data -->
     <style>
-        body { background-color: #f8fafc; }
-        .data-container { padding: 30px; max-width: 1100px; margin: 90px auto 40px auto; }
+        html,
+body {
+    width: 100%;
+    min-height: 100%;
+    height: auto !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+body {
+    background-color: #f8fafc;
+}
+        .data-container {
+    padding: 30px;
+    max-width: 1100px;
+    margin: 90px auto 60px auto;
+
+    min-height: calc(100vh - 90px);
+    height: auto;
+    overflow: visible;
+}
         
         .header-action { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-action h2 { margin: 0; color: #1e293b; font-size: 24px; }
+        .top-navbar {
+    position: sticky !important;
+    top: 0;
+    z-index: 2000;
+}
         
         .btn-print { background: #2563eb; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: background 0.3s; }
         .btn-print:hover { background: #1d4ed8; }
