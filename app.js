@@ -2292,40 +2292,103 @@ async function loadAllKelurahanWeather() {
         requests
     );
 
-
     // ==================================================
-    // FINALISASI
+    // FINALISASI PETA
     // ==================================================
-
     initializeForecastTimeline();
-
     updateMapForSelectedTime();
-
     updateBMKGInfoPanel();
 
-
     if (loadingBox) {
-
-        loadingBox.innerHTML =
-            "Data BMKG selesai dimuat ✓";
-
-
-        setTimeout(
-            function() {
-
-                loadingBox.style.display =
-                    "none";
-
-            },
-            2500
-        );
+        loadingBox.innerHTML = "Data BMKG selesai dimuat ✓";
+        setTimeout(function() {
+            loadingBox.style.display = "none";
+        }, 2500);
     }
+    console.log("Seluruh proses cuaca selesai.");
 
+    // ==================================================
+    // REKAP & SIMPAN 3 HARI KE SUPABASE (KOTA + 16 KECAMATAN)
+    // ==================================================
+    let keranjangSupabase = [];
 
-    console.log(
-        "Seluruh proses cuaca selesai."
-    );
-}
+    // Loop semua pias waktu (per jam) yang ada di timeline BMKG
+    forecastTimes.forEach(waktuTimeline => {
+        let tempSumKota = 0, humSumKota = 0, windSumKota = 0, countKota = 0;
+        let kondisiKotaCount = {};
+        let dataKecamatanTemp = {};
+
+        // Ekstrak data 177 Kelurahan pada jam tersebut
+        layerKelurahan.eachLayer(layer => {
+            const adm4 = layer.feature.properties.adm4;
+            const namaKecAsli = layer.feature.properties.Kecamatan;
+            
+            // Ubah "Semarang Tengah" menjadi format "KEC_SEMARANG_TENGAH"
+            const kodeKec = "KEC_" + namaKecAsli.toUpperCase().replace(/\s+/g, '_');
+            
+            const dataRaw = weatherCache.get(adm4);
+            if (dataRaw) {
+                const w = getForecastByTime(dataRaw, waktuTimeline);
+                if (w && w.t !== undefined && !isNaN(Number(w.t))) {
+                    
+                    // Tabung untuk rata-rata KOTA
+                    tempSumKota += Number(w.t);
+                    humSumKota += Number(w.hu);
+                    windSumKota += Number(w.ws);
+                    countKota++;
+                    kondisiKotaCount[w.weather_desc] = (kondisiKotaCount[w.weather_desc] || 0) + 1;
+
+                    // Tabung untuk rata-rata KECAMATAN
+                    if (!dataKecamatanTemp[kodeKec]) {
+                        dataKecamatanTemp[kodeKec] = { t: 0, hu: 0, ws: 0, count: 0, descCount: {} };
+                    }
+                    dataKecamatanTemp[kodeKec].t += Number(w.t);
+                    dataKecamatanTemp[kodeKec].hu += Number(w.hu);
+                    dataKecamatanTemp[kodeKec].ws += Number(w.ws);
+                    dataKecamatanTemp[kodeKec].count++;
+                    dataKecamatanTemp[kodeKec].descCount[w.weather_desc] = (dataKecamatanTemp[kodeKec].descCount[w.weather_desc] || 0) + 1;
+                }
+            }
+        });
+
+        // Format waktu menjadi standar ISO untuk Supabase
+        const waktuISO = parseLocalDateTime(waktuTimeline).toISOString();
+
+        // 1. Bungkus Hasil KOTA SEMARANG
+        if (countKota > 0) {
+            const domDescKota = Object.keys(kondisiKotaCount).reduce((a, b) => kondisiKotaCount[a] > kondisiKotaCount[b] ? a : b);
+            keranjangSupabase.push({
+                kode_wilayah: 'KOTA_SMG',
+                waktu: waktuISO,
+                suhu: Math.round(tempSumKota / countKota),
+                kelembapan: Math.round(humSumKota / countKota),
+                angin: Math.round(windSumKota / countKota),
+                kondisi_cuaca: domDescKota
+            });
+        }
+
+        // 2. Bungkus Hasil 16 KECAMATAN
+        for (let kodeKec in dataKecamatanTemp) {
+            const k = dataKecamatanTemp[kodeKec];
+            if (k.count > 0) {
+                const domDescKec = Object.keys(k.descCount).reduce((a, b) => k.descCount[a] > k.descCount[b] ? a : b);
+                keranjangSupabase.push({
+                    kode_wilayah: kodeKec,
+                    waktu: waktuISO,
+                    suhu: Math.round(k.t / k.count),
+                    kelembapan: Math.round(k.hu / k.count),
+                    angin: Math.round(k.ws / k.count),
+                    kondisi_cuaca: domDescKec
+                });
+            }
+        }
+    });
+
+    // TEMBAKKAN KE SUPABASE SEKALIGUS
+    // Penyimpanan historis sekarang dilakukan otomatis oleh backend Vercel.
+// simpanMassalKeSupabase(keranjangSupabase);
+
+} // <-- Ini adalah kurung penutup fungsi utama loadAllKelurahanWeather
 
 
 // ======================================================
@@ -3097,4 +3160,92 @@ if (searchInput) {
             }
         }
     });
+}
+
+// ======================================================
+// SIMPAN KE SUPABASE (METODE UPSERT)
+// ======================================================
+async function simpanOtomatisKeSupabase() {
+    try {
+        const suhuTeks = document.getElementById("city-temp").textContent; 
+        const humTeks = document.getElementById("city-humidity").textContent; 
+        const windTeks = document.getElementById("city-wind").textContent; 
+        const descTeks = document.getElementById("city-desc").textContent; 
+        
+        const suhu = parseFloat(suhuTeks) || 0;
+        const kelembapan = parseFloat(humTeks) || 0;
+        const angin = parseFloat(windTeks) || 0;
+        const kondisi = descTeks.replace(/[^a-zA-Z\s]/g, '').trim() || "Tidak diketahui";
+
+        if (suhu === 0 || isNaN(suhu)) {
+            console.log("Data cuaca kosong, batal menyimpan.");
+            return;
+        }
+
+        // Bulatkan waktu ke menit 00 agar Supabase mendeteksi jam yang sama untuk ditimpa
+        let waktuAktual = new Date();
+        waktuAktual.setMinutes(0, 0, 0); 
+
+        const payload = {
+            kode_wilayah: 'KOTA_SMG',
+            waktu: waktuAktual.toISOString(),
+            suhu: suhu,
+            kelembapan: kelembapan,
+            angin: angin,
+            kondisi_cuaca: kondisi
+        };
+
+        const SUPABASE_URL = 'https://malpetbethrghgaqvgnf.supabase.co/rest/v1/riwayat_cuaca';
+        const SUPABASE_KEY = 'sb_publishable_T7nqycPtPHpPnjR4hOQ24w_X7XlCIiL';
+
+        const responSupabase = await fetch(SUPABASE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                // Instruksi menimpa data jika waktu (jam) sama
+                'Prefer': 'resolution=merge-duplicates' 
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (responSupabase.ok) {
+            console.log("✅ Data Kota Semarang berhasil di-Upsert ke Supabase!");
+        }
+    } catch (error) {
+        console.error("❌ Gagal menyimpan ke Supabase:", error);
+    }
+}
+
+// ======================================================
+// SIMPAN MASSAL KE SUPABASE (KOTA & KECAMATAN)
+// ======================================================
+async function simpanMassalKeSupabase(semuaData) {
+    if (!semuaData || semuaData.length === 0) return;
+    console.log(`Mencoba mengirim ${semuaData.length} baris data ke Supabase...`);
+
+    const SUPABASE_URL = 'https://malpetbethrghgaqvgnf.supabase.co/rest/v1/riwayat_cuaca';
+    const SUPABASE_KEY = 'sb_publishable_T7nqycPtPHpPnjR4hOQ24w_X7XlCIiL';
+
+    try {
+        const responSupabase = await fetch(SUPABASE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Prefer': 'resolution=merge-duplicates' 
+            },
+            body: JSON.stringify(semuaData) 
+        });
+
+        if (responSupabase.ok) {
+            console.log(`✅ Berhasil menyimpan seluruh data cuaca ke Supabase!`);
+        } else {
+            console.error("❌ Gagal menyimpan:", await responSupabase.text());
+        }
+    } catch (error) {
+        console.error("❌ Kesalahan jaringan saat menyimpan:", error);
+    }
 }
