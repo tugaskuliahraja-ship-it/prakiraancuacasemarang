@@ -1,4020 +1,2092 @@
 <!DOCTYPE html>
 
-
-
 <html lang="id" data-theme="light">
-
-
 
 <head>
 
+    <meta charset="UTF-8">
 
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <meta charset="UTF-8">
+    <title>
+        Riwayat Data Cuaca - WebGIS Semarang
+    </title>
 
 
+    <!-- =====================================================
+         FONT
+         ===================================================== -->
 
-    <meta
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
 
-        name="viewport"
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
 
-        content="width=device-width, initial-scale=1.0"
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
 
-    >
 
+    <!-- =====================================================
+         CSS UTAMA PROJECT
+         ===================================================== -->
 
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
-    <title>
 
-        Riwayat Data Cuaca - WebGIS Semarang
+    <!-- =====================================================
+         CSS KHUSUS HALAMAN RIWAYAT
+         ===================================================== -->
 
-    </title>
+    <style>
 
+        /* =====================================================
+           RESET HALAMAN RIWAYAT
 
+           style.css halaman peta memakai overflow hidden.
+           Halaman riwayat harus bisa scroll vertikal.
+           ===================================================== */
 
+        html,
+        body {
 
+            width: 100%;
 
-    <!-- =====================================================
+            min-height: 100%;
 
-         FONT
+            height: auto !important;
 
-         ===================================================== -->
+            margin: 0;
 
+            padding: 0;
 
+            overflow-x: hidden !important;
 
-    <link
+            overflow-y: auto !important;
 
-        rel="preconnect"
+            font-family:
+                'Plus Jakarta Sans',
+                sans-serif;
 
-        href="https://fonts.googleapis.com"
+            background:
+                #f8fafc;
 
-    >
+            color:
+                #1e293b;
+        }
 
 
+        * {
+            box-sizing: border-box;
+        }
 
-    <link
 
-        rel="preconnect"
+        /* =====================================================
+           NAVBAR
+           ===================================================== */
 
-        href="https://fonts.gstatic.com"
+        .top-navbar {
 
-        crossorigin
+            position: sticky !important;
 
-    >
+            top: 0;
 
+            z-index: 3000;
 
+            width: 100%;
+        }
 
-    <link
 
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        /* =====================================================
+           CONTAINER HALAMAN
+           ===================================================== */
 
-        rel="stylesheet"
+        .data-container {
 
-    >
+            width:
+                calc(100% - 40px);
 
+            max-width:
+                1200px;
 
+            min-height:
+                calc(100vh - 80px);
 
+            height:
+                auto;
 
+            margin:
+                45px auto 70px auto;
 
-    <!-- =====================================================
+            padding:
+                30px;
 
-         CSS UTAMA PROJECT
+            overflow:
+                visible;
+        }
 
-         ===================================================== -->
 
+        /* =====================================================
+           HEADER ATAS
+           ===================================================== */
 
+        .header-action {
 
-    <link
+            display:
+                flex;
 
-        rel="stylesheet"
+            justify-content:
+                space-between;
 
-        href="style.css"
+            align-items:
+                center;
 
-    >
+            gap:
+                20px;
 
+            margin-bottom:
+                20px;
+        }
 
 
+        .header-action h2 {
 
+            margin:
+                0;
 
-    <!-- =====================================================
+            font-size:
+                26px;
 
-         CSS KHUSUS HALAMAN RIWAYAT
+            font-weight:
+                800;
 
-         ===================================================== -->
+            color:
+                #1e293b;
+        }
 
 
+        /* =====================================================
+           BUTTON PDF
+           ===================================================== */
 
-    <style>
+        .btn-print {
 
+            display:
+                flex;
 
+            align-items:
+                center;
 
-        /* =====================================================
+            justify-content:
+                center;
 
-           RESET HALAMAN RIWAYAT
+            gap:
+                8px;
 
+            padding:
+                11px 20px;
 
+            border:
+                none;
 
-           style.css halaman peta memakai overflow hidden.
+            border-radius:
+                9px;
 
-           Halaman riwayat harus bisa scroll vertikal.
+            background:
+                #2563eb;
 
-           ===================================================== */
+            color:
+                #ffffff;
 
+            font-family:
+                inherit;
 
+            font-size:
+                14px;
 
-        html,
+            font-weight:
+                700;
 
-        body {
+            white-space:
+                nowrap;
 
+            cursor:
+                pointer;
 
+            transition:
+                transform .2s ease,
+                background-color .2s ease,
+                box-shadow .2s ease;
+        }
 
-            width: 100%;
 
+        .btn-print:hover {
 
+            background:
+                #1d4ed8;
 
-            min-height: 100%;
+            transform:
+                translateY(-1px);
 
+            box-shadow:
+                0 6px 18px
+                rgba(37, 99, 235, .24);
+        }
 
 
-            height: auto !important;
+        /* =====================================================
+           FILTER CARD
+           ===================================================== */
 
+        .filter-card {
 
+            display:
+                grid;
 
-            margin: 0;
+            grid-template-columns:
+                repeat(4, minmax(0, 1fr));
 
+            gap:
+                14px;
 
+            padding:
+                20px;
 
-            padding: 0;
+            margin-bottom:
+                28px;
 
+            border:
+                1px solid #e2e8f0;
 
+            border-radius:
+                14px;
 
-            overflow-x: hidden !important;
+            background:
+                #ffffff;
 
+            box-shadow:
+                0 5px 20px
+                rgba(15, 23, 42, .04);
+        }
 
 
-            overflow-y: auto !important;
+        .filter-card select {
 
+            width:
+                100%;
 
+            min-width:
+                0;
 
-            font-family:
+            padding:
+                12px 14px;
 
-                'Plus Jakarta Sans',
+            border:
+                1px solid #cbd5e1;
 
-                sans-serif;
+            border-radius:
+                9px;
 
+            outline:
+                none;
 
+            background:
+                #ffffff;
 
-            background:
+            color:
+                #1e293b;
 
-                #f8fafc;
+            font-family:
+                inherit;
 
+            font-size:
+                14px;
 
+            cursor:
+                pointer;
 
-            color:
+            transition:
+                border-color .2s ease,
+                box-shadow .2s ease,
+                background-color .3s ease,
+                color .3s ease;
+        }
 
-                #1e293b;
 
-        }
+        .filter-card select:focus {
 
+            border-color:
+                #3b82f6;
 
+            box-shadow:
+                0 0 0 3px
+                rgba(59, 130, 246, .12);
+        }
 
 
+        .filter-card select:disabled {
 
-        * {
+            background:
+                #f1f5f9;
 
-            box-sizing: border-box;
+            color:
+                #94a3b8;
 
-        }
+            cursor:
+                not-allowed;
+        }
 
 
+        /* =====================================================
+           KARTU LAPORAN
+           ===================================================== */
 
+        .table-card {
 
+            width:
+                100%;
 
-        /* =====================================================
+            padding:
+                36px;
 
-           NAVBAR
+            border:
+                1px solid #e2e8f0;
 
-           ===================================================== */
+            border-radius:
+                14px;
 
+            background:
+                #ffffff;
 
+            box-shadow:
+                0 5px 22px
+                rgba(15, 23, 42, .05);
 
-        .top-navbar {
+            overflow:
+                visible;
+        }
 
 
+        /* =====================================================
+           HEADER LAPORAN
+           ===================================================== */
 
-            position: sticky !important;
+        .table-header {
 
+            text-align:
+                center;
 
+            padding-bottom:
+                24px;
 
-            top: 0;
+            margin-bottom:
+                28px;
 
+            border-bottom:
+                2px solid #f1f5f9;
+        }
 
 
-            z-index: 3000;
+        .table-header img {
 
+            height:
+                62px;
 
+            width:
+                auto;
 
-            width: 100%;
+            margin-bottom:
+                12px;
+        }
 
-        }
 
+        .table-header h3 {
 
+            margin:
+                3px 0 10px 0;
 
+            color:
+                #1e293b;
 
+            font-size:
+                20px;
 
-        /* =====================================================
+            font-weight:
+                800;
+        }
 
-           CONTAINER HALAMAN
 
-           ===================================================== */
+        #label-lokasi {
 
+            margin:
+                0;
 
+            color:
+                #64748b;
 
-        .data-container {
+            font-size:
+                15px;
 
+            font-weight:
+                500;
+        }
 
 
-            width:
+        #label-waktu {
 
-                calc(100% - 40px);
+            margin:
+                5px 0 0 0;
 
+            color:
+                #64748b;
 
+            font-size:
+                13px;
+        }
 
-            max-width:
 
-                1200px;
+        /* =====================================================
+           WRAPPER TABEL
 
+           Scroll halaman tetap normal.
+           Horizontal scroll hanya saat layar terlalu sempit.
+           ===================================================== */
 
+        .table-scroll-wrapper {
 
-            min-height:
+            width:
+                100%;
 
-                calc(100vh - 80px);
+            max-height:
+                none;
 
+            overflow-x:
+                auto;
 
+            overflow-y:
+                visible;
 
-            height:
+            border:
+                1px solid #e2e8f0;
 
-                auto;
+            border-radius:
+                10px;
 
+            -webkit-overflow-scrolling:
+                touch;
+        }
 
 
-            margin:
+        /* =====================================================
+           TABEL
+           ===================================================== */
 
-                45px auto 70px auto;
+        #tabel-cuaca {
 
+            width:
+                100%;
 
+            min-width:
+                1080px;
 
-            padding:
+            margin:
+                0;
 
-                30px;
+            border-collapse:
+                collapse;
 
+            background:
+                #ffffff;
+        }
 
 
-            overflow:
+        #tabel-cuaca th,
+        #tabel-cuaca td {
 
-                visible;
+            padding:
+                13px 14px;
 
-        }
+            border:
+                1px solid #e2e8f0;
 
+            text-align:
+                left;
 
+            vertical-align:
+                middle;
 
+            font-size:
+                13px;
 
+            line-height:
+                1.45;
+        }
 
-        /* =====================================================
 
-           HEADER ATAS
+        #tabel-cuaca th {
 
-           ===================================================== */
+            position:
+                sticky;
 
+            top:
+                0;
 
+            z-index:
+                5;
 
-        .header-action {
+            background:
+                #f8fafc;
 
+            color:
+                #475569;
 
+            font-weight:
+                700;
 
-            display:
+            white-space:
+                normal;
+        }
 
-                flex;
 
+        #tabel-cuaca td {
 
+            color:
+                #334155;
 
-            justify-content:
+            background:
+                #ffffff;
+        }
 
-                space-between;
 
+        #tabel-cuaca tbody tr:nth-child(even) td {
 
+            background:
+                #fbfdff;
+        }
 
-            align-items:
 
-                center;
+        #tabel-cuaca tbody tr {
 
+            transition:
+                background-color .2s ease;
+        }
 
 
-            gap:
+        #tabel-cuaca tbody tr:hover td {
 
-                20px;
+            background:
+                #f1f5f9;
+        }
 
 
+        /* =====================================================
+           LEBAR KOLOM
+           ===================================================== */
 
-            margin-bottom:
+        #tabel-cuaca th:nth-child(1) {
+            min-width: 165px;
+        }
 
-                20px;
+        #tabel-cuaca th:nth-child(2) {
+            min-width: 165px;
+        }
 
-        }
+        #tabel-cuaca th:nth-child(3) {
+            min-width: 145px;
+        }
 
+        #tabel-cuaca th:nth-child(4) {
+            min-width: 95px;
+        }
 
+        #tabel-cuaca th:nth-child(5) {
+            min-width: 115px;
+        }
 
+        #tabel-cuaca th:nth-child(6) {
+            min-width: 135px;
+        }
 
+        #tabel-cuaca th:nth-child(7) {
+            min-width: 105px;
+        }
 
-        .header-action h2 {
+        #tabel-cuaca th:nth-child(8) {
+            min-width: 125px;
+        }
 
 
+        /* =====================================================
+           SCROLLBAR TABEL
+           ===================================================== */
 
-            margin:
+        .table-scroll-wrapper::-webkit-scrollbar {
 
-                0;
+            width:
+                9px;
 
+            height:
+                9px;
+        }
 
 
-            font-size:
+        .table-scroll-wrapper::-webkit-scrollbar-track {
 
-                26px;
+            background:
+                #f1f5f9;
+        }
 
 
+        .table-scroll-wrapper::-webkit-scrollbar-thumb {
 
-            font-weight:
+            background:
+                #cbd5e1;
 
-                800;
+            border-radius:
+                20px;
+        }
 
 
+        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
 
-            color:
+            background:
+                #94a3b8;
+        }
 
-                #1e293b;
 
-        }
+        /* =====================================================
+           FOOTER LAPORAN
+           ===================================================== */
 
+        .print-footer {
 
+            display:
+                flex;
 
+            justify-content:
+                space-between;
 
+            align-items:
+                flex-end;
 
-        /* =====================================================
+            gap:
+                20px;
 
-           BUTTON PDF
+            margin-top:
+                28px;
 
-           ===================================================== */
+            padding-top:
+                16px;
 
+            border-top:
+                1px solid #e2e8f0;
 
+            color:
+                #64748b;
 
-        .btn-print {
+            font-size:
+                11px;
 
+            line-height:
+                1.5;
+        }
 
 
-            display:
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
 
-                flex;
+        @media (
+            max-width: 950px
+        ) {
 
+            .filter-card {
 
+                grid-template-columns:
+                    repeat(
+                        2,
+                        minmax(0, 1fr)
+                    );
+            }
 
-            align-items:
 
-                center;
+            .data-container {
 
+                width:
+                    calc(100% - 20px);
 
+                padding:
+                    20px;
 
-            justify-content:
+                margin-top:
+                    30px;
+            }
 
-                center;
 
+            .table-card {
 
+                padding:
+                    24px;
+            }
+        }
 
-            gap:
 
-                8px;
+        @media (
+            max-width: 600px
+        ) {
 
+            .filter-card {
 
+                grid-template-columns:
+                    1fr;
+            }
 
-            padding:
 
-                11px 20px;
+            .header-action {
 
+                flex-direction:
+                    column;
 
+                align-items:
+                    flex-start;
+            }
 
-            border:
 
-                none;
+            .btn-print {
 
+                width:
+                    100%;
+            }
 
 
-            border-radius:
+            .print-footer {
 
-                9px;
+                flex-direction:
+                    column;
 
+                align-items:
+                    flex-start;
+            }
+        }
 
 
-            background:
+        /* =====================================================
+           =====================================================
 
-                #2563eb;
+           DARK MODE OTOMATIS
 
+           theme.js akan memberikan:
+           html[data-theme="dark"]
 
+           =====================================================
+           ===================================================== */
 
-            color:
 
-                #ffffff;
+        html[data-theme="dark"],
+        html[data-theme="dark"] body {
 
+            background:
+                #08111f !important;
 
+            color:
+                #e5edf7;
+        }
 
-            font-family:
 
-                inherit;
+        /* =====================================================
+           NAVBAR DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .top-navbar {
 
+            background:
+                rgba(
+                    15,
+                    23,
+                    42,
+                    .97
+                );
 
-            font-size:
+            border-bottom:
+                1px solid #334155;
 
-                14px;
+            box-shadow:
+                0 5px 20px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .30
+                );
+        }
 
 
+        html[data-theme="dark"]
+        .brand-title {
 
-            font-weight:
+            color:
+                #f1f5f9;
+        }
 
-                700;
 
+        html[data-theme="dark"]
+        .brand-subtitle {
 
+            color:
+                #94a3b8;
+        }
 
-            white-space:
 
-                nowrap;
+        html[data-theme="dark"]
+        .nav-tab {
 
+            color:
+                #94a3b8;
+        }
 
 
-            cursor:
+        html[data-theme="dark"]
+        .nav-tab:hover {
 
-                pointer;
+            color:
+                #e2e8f0;
+        }
 
 
+        html[data-theme="dark"]
+        .nav-tab.active {
 
-            transition:
+            background:
+                #2196f3;
 
-                transform .2s ease,
+            color:
+                #ffffff;
+        }
 
-                background-color .2s ease,
 
-                box-shadow .2s ease;
+        html[data-theme="dark"]
+        .nav-clock {
 
-        }
+            background:
+                #172033;
 
+            color:
+                #e5edf7;
+        }
 
 
+        /* =====================================================
+           HEADER DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .header-action h2 {
 
-        .btn-print:hover {
+            color:
+                #f1f5f9;
+        }
 
 
+        /* =====================================================
+           FILTER DARK
+           ===================================================== */
 
-            background:
+        html[data-theme="dark"]
+        .filter-card {
 
-                #1d4ed8;
+            background:
+                #111827;
 
+            border-color:
+                #334155;
 
+            box-shadow:
+                0 8px 30px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .28
+                );
+        }
 
-            transform:
 
-                translateY(-1px);
+        html[data-theme="dark"]
+        .filter-card select {
 
+            background:
+                #172033;
 
+            border-color:
+                #475569;
 
-            box-shadow:
+            color:
+                #e5edf7;
 
-                0 6px 18px
+            color-scheme:
+                dark;
+        }
 
-                rgba(37, 99, 235, .24);
 
-        }
+        html[data-theme="dark"]
+        .filter-card select:focus {
 
+            border-color:
+                #60a5fa;
 
+            box-shadow:
+                0 0 0 3px
+                rgba(
+                    96,
+                    165,
+                    250,
+                    .15
+                );
+        }
 
 
+        html[data-theme="dark"]
+        .filter-card select:disabled {
 
-        /* =====================================================
+            background:
+                #0f172a;
 
-           FILTER CARD
+            border-color:
+                #334155;
 
-           ===================================================== */
+            color:
+                #64748b;
+        }
 
 
+        /* =====================================================
+           BUTTON DARK
+           ===================================================== */
 
-        .filter-card {
+        html[data-theme="dark"]
+        .btn-print {
 
+            background:
+                #2563eb;
 
+            color:
+                #ffffff;
 
-            display:
+            box-shadow:
+                0 6px 18px
+                rgba(
+                    37,
+                    99,
+                    235,
+                    .20
+                );
+        }
 
-                grid;
 
+        html[data-theme="dark"]
+        .btn-print:hover {
 
+            background:
+                #3b82f6;
+        }
 
-            grid-template-columns:
 
-                repeat(4, minmax(0, 1fr));
+        /* =====================================================
+           REPORT CARD DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .table-card {
 
+            background:
+                #111827;
 
-            gap:
+            border-color:
+                #334155;
 
-                14px;
+            box-shadow:
+                0 10px 35px
+                rgba(
+                    0,
+                    0,
+                    0,
+                    .32
+                );
+        }
 
 
+        html[data-theme="dark"]
+        .table-header {
 
-            padding:
+            border-bottom-color:
+                #334155;
+        }
 
-                20px;
 
+        html[data-theme="dark"]
+        .table-header h3 {
 
+            color:
+                #f1f5f9;
+        }
 
-            margin-bottom:
 
-                28px;
+        html[data-theme="dark"]
+        #label-lokasi,
 
+        html[data-theme="dark"]
+        #label-waktu {
 
+            color:
+                #94a3b8 !important;
+        }
 
-            border:
 
-                1px solid #e2e8f0;
+        /* =====================================================
+           TABLE DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .table-scroll-wrapper {
 
+            border-color:
+                #334155;
+        }
 
-            border-radius:
 
-                14px;
+        html[data-theme="dark"]
+        #tabel-cuaca {
 
+            background:
+                #111827;
+        }
 
 
-            background:
+        html[data-theme="dark"]
+        #tabel-cuaca th {
 
-                #ffffff;
+            background:
+                #172033;
 
+            border-color:
+                #334155;
 
+            color:
+                #e5edf7;
+        }
 
-            box-shadow:
 
-                0 5px 20px
+        html[data-theme="dark"]
+        #tabel-cuaca td {
 
-                rgba(15, 23, 42, .04);
+            background:
+                #111827;
 
-        }
+            border-color:
+                #334155;
 
+            color:
+                #dbe5f1;
+        }
 
 
+        html[data-theme="dark"]
+        #tabel-cuaca tbody
+        tr:nth-child(even) td {
 
+            background:
+                #162032;
+        }
 
-        .filter-card select {
 
+        html[data-theme="dark"]
+        #tabel-cuaca tbody
+        tr:hover td {
 
+            background:
+                #1e293b;
+        }
 
-            width:
 
-                100%;
+        /* =====================================================
+           FOOTER DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .print-footer {
 
+            border-top-color:
+                #334155;
 
-            min-width:
+            color:
+                #94a3b8;
+        }
 
-                0;
 
+        /* =====================================================
+           SCROLLBAR DARK
+           ===================================================== */
 
+        html[data-theme="dark"]
+        .table-scroll-wrapper::-webkit-scrollbar-track {
 
-            padding:
+            background:
+                #0f172a;
+        }
 
-                12px 14px;
 
+        html[data-theme="dark"]
+        .table-scroll-wrapper::-webkit-scrollbar-thumb {
 
+            background:
+                #475569;
+        }
 
-            border:
 
-                1px solid #cbd5e1;
+        html[data-theme="dark"]
+        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
 
+            background:
+                #64748b;
+        }
 
 
-            border-radius:
+        /* =====================================================
+           TRANSITION LIGHT <-> DARK
+           ===================================================== */
 
-                9px;
+        body,
 
+        .top-navbar,
 
+        .filter-card,
 
-            outline:
+        .table-card,
 
-                none;
+        .filter-card select,
 
+        #tabel-cuaca,
 
+        #tabel-cuaca th,
 
-            background:
+        #tabel-cuaca td,
 
-                #ffffff;
+        .nav-clock {
 
+            transition:
+                background-color .35s ease,
+                color .35s ease,
+                border-color .35s ease,
+                box-shadow .35s ease;
+        }
 
 
-            color:
+        /* =====================================================
+           PRINT BROWSER
 
-                #1e293b;
+           Walaupun web sedang DARK,
+           kalau diprint manual hasil tetap putih.
+           PDF utama tetap ditangani jsPDF di data.js.
+           ===================================================== */
 
+        @media print {
 
+            html,
+            body {
 
-            font-family:
+                width:
+                    100% !important;
 
-                inherit;
+                background:
+                    #ffffff !important;
 
+                color:
+                    #1e293b !important;
 
+                overflow:
+                    visible !important;
+            }
 
-            font-size:
 
-                14px;
+            .top-navbar,
+            .header-action,
+            .filter-card {
 
+                display:
+                    none !important;
+            }
 
 
-            cursor:
+            .data-container {
 
-                pointer;
+                width:
+                    100% !important;
 
+                max-width:
+                    none !important;
 
+                margin:
+                    0 !important;
 
-            transition:
+                padding:
+                    0 !important;
+            }
 
-                border-color .2s ease,
 
-                box-shadow .2s ease,
+            .table-card {
 
-                background-color .3s ease,
+                background:
+                    #ffffff !important;
 
-                color .3s ease;
+                color:
+                    #1e293b !important;
 
-        }
+                border:
+                    none !important;
 
+                box-shadow:
+                    none !important;
+            }
 
 
+            .table-scroll-wrapper {
 
+                overflow:
+                    visible !important;
 
-        .filter-card select:focus {
+                border:
+                    none !important;
+            }
 
 
+            #tabel-cuaca {
 
-            border-color:
+                min-width:
+                    0 !important;
 
-                #3b82f6;
+                background:
+                    #ffffff !important;
+            }
 
 
+            #tabel-cuaca th {
 
-            box-shadow:
+                position:
+                    static !important;
 
-                0 0 0 3px
+                background:
+                    #f1f5f9 !important;
 
-                rgba(59, 130, 246, .12);
+                color:
+                    #1e293b !important;
 
-        }
+                border-color:
+                    #cbd5e1 !important;
+            }
 
 
+            #tabel-cuaca td {
 
+                background:
+                    #ffffff !important;
 
+                color:
+                    #334155 !important;
 
-        .filter-card select:disabled {
+                border-color:
+                    #cbd5e1 !important;
+            }
 
 
+            #tabel-cuaca tr {
 
-            background:
+                break-inside:
+                    avoid;
 
-                #f1f5f9;
+                page-break-inside:
+                    avoid;
+            }
 
 
+            .print-footer {
 
-            color:
+                color:
+                    #64748b !important;
 
-                #94a3b8;
+                border-color:
+                    #cbd5e1 !important;
+            }
+        }
 
-
-
-            cursor:
-
-                not-allowed;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           KARTU LAPORAN
-
-           ===================================================== */
-
-
-
-        .table-card {
-
-
-
-            width:
-
-                100%;
-
-
-
-            padding:
-
-                36px;
-
-
-
-            border:
-
-                1px solid #e2e8f0;
-
-
-
-            border-radius:
-
-                14px;
-
-
-
-            background:
-
-                #ffffff;
-
-
-
-            box-shadow:
-
-                0 5px 22px
-
-                rgba(15, 23, 42, .05);
-
-
-
-            overflow:
-
-                visible;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           HEADER LAPORAN
-
-           ===================================================== */
-
-
-
-        .table-header {
-
-
-
-            text-align:
-
-                center;
-
-
-
-            padding-bottom:
-
-                24px;
-
-
-
-            margin-bottom:
-
-                28px;
-
-
-
-            border-bottom:
-
-                2px solid #f1f5f9;
-
-        }
-
-
-
-
-
-        .table-header img {
-
-
-
-            height:
-
-                62px;
-
-
-
-            width:
-
-                auto;
-
-
-
-            margin-bottom:
-
-                12px;
-
-        }
-
-
-
-
-
-        .table-header h3 {
-
-
-
-            margin:
-
-                3px 0 10px 0;
-
-
-
-            color:
-
-                #1e293b;
-
-
-
-            font-size:
-
-                20px;
-
-
-
-            font-weight:
-
-                800;
-
-        }
-
-
-
-
-
-        #label-lokasi {
-
-
-
-            margin:
-
-                0;
-
-
-
-            color:
-
-                #64748b;
-
-
-
-            font-size:
-
-                15px;
-
-
-
-            font-weight:
-
-                500;
-
-        }
-
-
-
-
-
-        #label-waktu {
-
-
-
-            margin:
-
-                5px 0 0 0;
-
-
-
-            color:
-
-                #64748b;
-
-
-
-            font-size:
-
-                13px;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           WRAPPER TABEL
-
-
-
-           Scroll halaman tetap normal.
-
-           Horizontal scroll hanya saat layar terlalu sempit.
-
-           ===================================================== */
-
-
-
-        .table-scroll-wrapper {
-
-
-
-            width:
-
-                100%;
-
-
-
-            max-height:
-
-                none;
-
-
-
-            overflow-x:
-
-                auto;
-
-
-
-            overflow-y:
-
-                visible;
-
-
-
-            border:
-
-                1px solid #e2e8f0;
-
-
-
-            border-radius:
-
-                10px;
-
-
-
-            -webkit-overflow-scrolling:
-
-                touch;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           TABEL
-
-           ===================================================== */
-
-
-
-        #tabel-cuaca {
-
-
-
-            width:
-
-                100%;
-
-
-
-            min-width:
-
-                1080px;
-
-
-
-            margin:
-
-                0;
-
-
-
-            border-collapse:
-
-                collapse;
-
-
-
-            background:
-
-                #ffffff;
-
-        }
-
-
-
-
-
-        #tabel-cuaca th,
-
-        #tabel-cuaca td {
-
-
-
-            padding:
-
-                13px 14px;
-
-
-
-            border:
-
-                1px solid #e2e8f0;
-
-
-
-            text-align:
-
-                left;
-
-
-
-            vertical-align:
-
-                middle;
-
-
-
-            font-size:
-
-                13px;
-
-
-
-            line-height:
-
-                1.45;
-
-        }
-
-
-
-
-
-        #tabel-cuaca th {
-
-
-
-            position:
-
-                sticky;
-
-
-
-            top:
-
-                0;
-
-
-
-            z-index:
-
-                5;
-
-
-
-            background:
-
-                #f8fafc;
-
-
-
-            color:
-
-                #475569;
-
-
-
-            font-weight:
-
-                700;
-
-
-
-            white-space:
-
-                normal;
-
-        }
-
-
-
-
-
-        #tabel-cuaca td {
-
-
-
-            color:
-
-                #334155;
-
-
-
-            background:
-
-                #ffffff;
-
-        }
-
-
-
-
-
-        #tabel-cuaca tbody tr:nth-child(even) td {
-
-
-
-            background:
-
-                #fbfdff;
-
-        }
-
-
-
-
-
-        #tabel-cuaca tbody tr {
-
-
-
-            transition:
-
-                background-color .2s ease;
-
-        }
-
-
-
-
-
-        #tabel-cuaca tbody tr:hover td {
-
-
-
-            background:
-
-                #f1f5f9;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           LEBAR KOLOM
-
-           ===================================================== */
-
-
-
-        #tabel-cuaca th:nth-child(1) {
-
-            min-width: 165px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(2) {
-
-            min-width: 165px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(3) {
-
-            min-width: 145px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(4) {
-
-            min-width: 95px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(5) {
-
-            min-width: 115px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(6) {
-
-            min-width: 135px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(7) {
-
-            min-width: 105px;
-
-        }
-
-
-
-        #tabel-cuaca th:nth-child(8) {
-
-            min-width: 125px;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           SCROLLBAR TABEL
-
-           ===================================================== */
-
-
-
-        .table-scroll-wrapper::-webkit-scrollbar {
-
-
-
-            width:
-
-                9px;
-
-
-
-            height:
-
-                9px;
-
-        }
-
-
-
-
-
-        .table-scroll-wrapper::-webkit-scrollbar-track {
-
-
-
-            background:
-
-                #f1f5f9;
-
-        }
-
-
-
-
-
-        .table-scroll-wrapper::-webkit-scrollbar-thumb {
-
-
-
-            background:
-
-                #cbd5e1;
-
-
-
-            border-radius:
-
-                20px;
-
-        }
-
-
-
-
-
-        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-
-
-
-            background:
-
-                #94a3b8;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           FOOTER LAPORAN
-
-           ===================================================== */
-
-
-
-        .print-footer {
-
-
-
-            display:
-
-                flex;
-
-
-
-            justify-content:
-
-                space-between;
-
-
-
-            align-items:
-
-                flex-end;
-
-
-
-            gap:
-
-                20px;
-
-
-
-            margin-top:
-
-                28px;
-
-
-
-            padding-top:
-
-                16px;
-
-
-
-            border-top:
-
-                1px solid #e2e8f0;
-
-
-
-            color:
-
-                #64748b;
-
-
-
-            font-size:
-
-                11px;
-
-
-
-            line-height:
-
-                1.5;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           RESPONSIVE
-
-           ===================================================== */
-
-
-
-        @media (
-
-            max-width: 950px
-
-        ) {
-
-
-
-            .filter-card {
-
-
-
-                grid-template-columns:
-
-                    repeat(
-
-                        2,
-
-                        minmax(0, 1fr)
-
-                    );
-
-            }
-
-
-
-
-
-            .data-container {
-
-
-
-                width:
-
-                    calc(100% - 20px);
-
-
-
-                padding:
-
-                    20px;
-
-
-
-                margin-top:
-
-                    30px;
-
-            }
-
-
-
-
-
-            .table-card {
-
-
-
-                padding:
-
-                    24px;
-
-            }
-
-        }
-
-
-
-
-
-        @media (
-
-            max-width: 600px
-
-        ) {
-
-
-
-            .filter-card {
-
-
-
-                grid-template-columns:
-
-                    1fr;
-
-            }
-
-
-
-
-
-            .header-action {
-
-
-
-                flex-direction:
-
-                    column;
-
-
-
-                align-items:
-
-                    flex-start;
-
-            }
-
-
-
-
-
-            .btn-print {
-
-
-
-                width:
-
-                    100%;
-
-            }
-
-
-
-
-
-            .print-footer {
-
-
-
-                flex-direction:
-
-                    column;
-
-
-
-                align-items:
-
-                    flex-start;
-
-            }
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           =====================================================
-
-
-
-           DARK MODE OTOMATIS
-
-
-
-           theme.js akan memberikan:
-
-           html[data-theme="dark"]
-
-
-
-           =====================================================
-
-           ===================================================== */
-
-
-
-
-
-        html[data-theme="dark"],
-
-        html[data-theme="dark"] body {
-
-
-
-            background:
-
-                #08111f !important;
-
-
-
-            color:
-
-                #e5edf7;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           NAVBAR DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .top-navbar {
-
-
-
-            background:
-
-                rgba(
-
-                    15,
-
-                    23,
-
-                    42,
-
-                    .97
-
-                );
-
-
-
-            border-bottom:
-
-                1px solid #334155;
-
-
-
-            box-shadow:
-
-                0 5px 20px
-
-                rgba(
-
-                    0,
-
-                    0,
-
-                    0,
-
-                    .30
-
-                );
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .brand-title {
-
-
-
-            color:
-
-                #f1f5f9;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .brand-subtitle {
-
-
-
-            color:
-
-                #94a3b8;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .nav-tab {
-
-
-
-            color:
-
-                #94a3b8;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .nav-tab:hover {
-
-
-
-            color:
-
-                #e2e8f0;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .nav-tab.active {
-
-
-
-            background:
-
-                #2196f3;
-
-
-
-            color:
-
-                #ffffff;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .nav-clock {
-
-
-
-            background:
-
-                #172033;
-
-
-
-            color:
-
-                #e5edf7;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           HEADER DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .header-action h2 {
-
-
-
-            color:
-
-                #f1f5f9;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           FILTER DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .filter-card {
-
-
-
-            background:
-
-                #111827;
-
-
-
-            border-color:
-
-                #334155;
-
-
-
-            box-shadow:
-
-                0 8px 30px
-
-                rgba(
-
-                    0,
-
-                    0,
-
-                    0,
-
-                    .28
-
-                );
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .filter-card select {
-
-
-
-            background:
-
-                #172033;
-
-
-
-            border-color:
-
-                #475569;
-
-
-
-            color:
-
-                #e5edf7;
-
-
-
-            color-scheme:
-
-                dark;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .filter-card select:focus {
-
-
-
-            border-color:
-
-                #60a5fa;
-
-
-
-            box-shadow:
-
-                0 0 0 3px
-
-                rgba(
-
-                    96,
-
-                    165,
-
-                    250,
-
-                    .15
-
-                );
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .filter-card select:disabled {
-
-
-
-            background:
-
-                #0f172a;
-
-
-
-            border-color:
-
-                #334155;
-
-
-
-            color:
-
-                #64748b;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           BUTTON DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .btn-print {
-
-
-
-            background:
-
-                #2563eb;
-
-
-
-            color:
-
-                #ffffff;
-
-
-
-            box-shadow:
-
-                0 6px 18px
-
-                rgba(
-
-                    37,
-
-                    99,
-
-                    235,
-
-                    .20
-
-                );
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .btn-print:hover {
-
-
-
-            background:
-
-                #3b82f6;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           REPORT CARD DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .table-card {
-
-
-
-            background:
-
-                #111827;
-
-
-
-            border-color:
-
-                #334155;
-
-
-
-            box-shadow:
-
-                0 10px 35px
-
-                rgba(
-
-                    0,
-
-                    0,
-
-                    0,
-
-                    .32
-
-                );
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .table-header {
-
-
-
-            border-bottom-color:
-
-                #334155;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .table-header h3 {
-
-
-
-            color:
-
-                #f1f5f9;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #label-lokasi,
-
-
-
-        html[data-theme="dark"]
-
-        #label-waktu {
-
-
-
-            color:
-
-                #94a3b8 !important;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           TABLE DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .table-scroll-wrapper {
-
-
-
-            border-color:
-
-                #334155;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #tabel-cuaca {
-
-
-
-            background:
-
-                #111827;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #tabel-cuaca th {
-
-
-
-            background:
-
-                #172033;
-
-
-
-            border-color:
-
-                #334155;
-
-
-
-            color:
-
-                #e5edf7;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #tabel-cuaca td {
-
-
-
-            background:
-
-                #111827;
-
-
-
-            border-color:
-
-                #334155;
-
-
-
-            color:
-
-                #dbe5f1;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #tabel-cuaca tbody
-
-        tr:nth-child(even) td {
-
-
-
-            background:
-
-                #162032;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        #tabel-cuaca tbody
-
-        tr:hover td {
-
-
-
-            background:
-
-                #1e293b;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           FOOTER DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .print-footer {
-
-
-
-            border-top-color:
-
-                #334155;
-
-
-
-            color:
-
-                #94a3b8;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           SCROLLBAR DARK
-
-           ===================================================== */
-
-
-
-        html[data-theme="dark"]
-
-        .table-scroll-wrapper::-webkit-scrollbar-track {
-
-
-
-            background:
-
-                #0f172a;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .table-scroll-wrapper::-webkit-scrollbar-thumb {
-
-
-
-            background:
-
-                #475569;
-
-        }
-
-
-
-
-
-        html[data-theme="dark"]
-
-        .table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
-
-
-
-            background:
-
-                #64748b;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           TRANSITION LIGHT <-> DARK
-
-           ===================================================== */
-
-
-
-        body,
-
-
-
-        .top-navbar,
-
-
-
-        .filter-card,
-
-
-
-        .table-card,
-
-
-
-        .filter-card select,
-
-
-
-        #tabel-cuaca,
-
-
-
-        #tabel-cuaca th,
-
-
-
-        #tabel-cuaca td,
-
-
-
-        .nav-clock {
-
-
-
-            transition:
-
-                background-color .35s ease,
-
-                color .35s ease,
-
-                border-color .35s ease,
-
-                box-shadow .35s ease;
-
-        }
-
-
-
-
-
-        /* =====================================================
-
-           PRINT BROWSER
-
-
-
-           Walaupun web sedang DARK,
-
-           kalau diprint manual hasil tetap putih.
-
-           PDF utama tetap ditangani jsPDF di data.js.
-
-           ===================================================== */
-
-
-
-        @media print {
-
-
-
-            html,
-
-            body {
-
-
-
-                width:
-
-                    100% !important;
-
-
-
-                background:
-
-                    #ffffff !important;
-
-
-
-                color:
-
-                    #1e293b !important;
-
-
-
-                overflow:
-
-                    visible !important;
-
-            }
-
-
-
-
-
-            .top-navbar,
-
-            .header-action,
-
-            .filter-card {
-
-
-
-                display:
-
-                    none !important;
-
-            }
-
-
-
-
-
-            .data-container {
-
-
-
-                width:
-
-                    100% !important;
-
-
-
-                max-width:
-
-                    none !important;
-
-
-
-                margin:
-
-                    0 !important;
-
-
-
-                padding:
-
-                    0 !important;
-
-            }
-
-
-
-
-
-            .table-card {
-
-
-
-                background:
-
-                    #ffffff !important;
-
-
-
-                color:
-
-                    #1e293b !important;
-
-
-
-                border:
-
-                    none !important;
-
-
-
-                box-shadow:
-
-                    none !important;
-
-            }
-
-
-
-
-
-            .table-scroll-wrapper {
-
-
-
-                overflow:
-
-                    visible !important;
-
-
-
-                border:
-
-                    none !important;
-
-            }
-
-
-
-
-
-            #tabel-cuaca {
-
-
-
-                min-width:
-
-                    0 !important;
-
-
-
-                background:
-
-                    #ffffff !important;
-
-            }
-
-
-
-
-
-            #tabel-cuaca th {
-
-
-
-                position:
-
-                    static !important;
-
-
-
-                background:
-
-                    #f1f5f9 !important;
-
-
-
-                color:
-
-                    #1e293b !important;
-
-
-
-                border-color:
-
-                    #cbd5e1 !important;
-
-            }
-
-
-
-
-
-            #tabel-cuaca td {
-
-
-
-                background:
-
-                    #ffffff !important;
-
-
-
-                color:
-
-                    #334155 !important;
-
-
-
-                border-color:
-
-                    #cbd5e1 !important;
-
-            }
-
-
-
-
-
-            #tabel-cuaca tr {
-
-
-
-                break-inside:
-
-                    avoid;
-
-
-
-                page-break-inside:
-
-                    avoid;
-
-            }
-
-
-
-
-
-            .print-footer {
-
-
-
-                color:
-
-                    #64748b !important;
-
-
-
-                border-color:
-
-                    #cbd5e1 !important;
-
-            }
-
-        }
-
-
-
-    </style>
-
-
+    </style>
 
 </head>
-
-
-
 
 
 <body>
 
 
+    <!-- =====================================================
+         NAVBAR
+         ===================================================== -->
 
+    <nav class="top-navbar">
 
 
-    <!-- =====================================================
+        <div class="nav-left">
 
-         NAVBAR
 
-         ===================================================== -->
+            <div class="brand">
 
 
+                <img
+                    src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg"
+                    alt="Logo BMKG"
+                    class="brand-logo"
+                >
 
-    <nav class="top-navbar">
 
+                <div class="brand-text">
 
+                    <span class="brand-title">
+                        Prakiraan Cuaca
+                    </span>
 
+                    <span class="brand-subtitle">
+                        Kota Semarang
+                    </span>
 
+                </div>
 
-        <div class="nav-left">
 
+            </div>
 
 
+            <div class="nav-tabs">
 
 
-            <div class="brand">
+                <button
+                    class="nav-tab"
+                    onclick="window.location.href='index.html'"
+                    style="cursor:pointer;"
+                >
 
+                    <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
 
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        ></path>
 
+                    </svg>
 
+                    Overview
+                    <button class="nav-tab" onclick="window.location.href='overview.html'" style="cursor:pointer;">
+    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+        </path>
+    </svg>
+    Overview
+</button>
 
-                <img
+                </button>
 
-                    src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg"
 
-                    alt="Logo BMKG"
+                <button
+                    class="nav-tab"
+                    onclick="window.location.href='index.html'"
+                    style="cursor:pointer;"
+                >
 
-                    class="brand-logo"
+                    <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
 
-                >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                        ></path>
 
+                    </svg>
 
+                    Peta Cuaca
 
+                </button>
 
 
-                <div class="brand-text">
+                <button class="nav-tab active">
 
+                    <svg
+                        width="16"
+                        height="16"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
 
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        ></path>
 
-                    <span class="brand-title">
+                    </svg>
 
-                        Prakiraan Cuaca
+                    Riwayat Data
 
-                    </span>
+                </button>
 
 
+            </div>
 
-                    <span class="brand-subtitle">
 
-                        Kota Semarang
+        </div>
 
-                    </span>
 
+        <!-- Tengah dikosongkan agar layout sama dengan peta -->
 
+        <div
+            class="nav-center"
+            style="visibility:hidden;"
+        >
 
-                </div>
+            <div class="search-bar">
 
+                <input
+                    type="text"
+                    aria-label="Placeholder"
+                >
 
+            </div>
 
+        </div>
 
 
-            </div>
+        <div class="nav-right">
 
 
+            <div
+                style="
+                    visibility:hidden;
+                    display:flex;
+                "
+            >
 
+                <button class="nav-icon-btn">
+                    <svg width="18" height="18"></svg>
+                </button>
 
+                <button class="nav-icon-btn">
+                    <svg width="18" height="18"></svg>
+                </button>
 
-            <div class="nav-tabs">
-    <button class="nav-tab" onclick="window.location.href='overview.html'" style="cursor:pointer;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-        </svg>
-        Overview
-    </button>
-    <button class="nav-tab" onclick="window.location.href='index.html'" style="cursor:pointer;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
-        </svg>
-        Peta Cuaca
-    </button>
-    <button class="nav-tab active" onclick="window.location.href='data.html'" style="cursor:pointer;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        Riwayat Data
-    </button>
-</div>
+            </div>
 
 
+            <div class="nav-clock">
 
 
+                <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
 
-        </div>
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    ></path>
 
+                </svg>
 
 
+                <span id="realtime-clock">
+                    --:-- WIB
+                </span>
 
 
-        <!-- Tengah dikosongkan agar layout sama dengan peta -->
+            </div>
 
 
+        </div>
 
-        <div
 
-            class="nav-center"
+    </nav>
 
-            style="visibility:hidden;"
 
-        >
+    <!-- =====================================================
+         MAIN CONTENT
+         ===================================================== -->
 
+    <main class="data-container">
 
 
-            <div class="search-bar">
+        <!-- =================================================
+             HEADER
+             ================================================= -->
 
+        <div class="header-action">
 
 
-                <input
+            <h2>
+                Arsip Prakiraan Cuaca
+            </h2>
 
-                    type="text"
 
-                    aria-label="Placeholder"
+            <button
+                id="btn-cetak-pdf"
+                class="btn-print"
+            >
 
-                >
+                <svg
+                    width="18"
+                    height="18"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
 
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+                    ></path>
 
+                </svg>
 
-            </div>
+                Cetak ke PDF
 
+            </button>
 
 
-        </div>
+        </div>
 
 
+        <!-- =================================================
+             FILTER
+             ================================================= -->
 
+        <section class="filter-card">
 
 
-        <div class="nav-right">
+            <select
+                id="pilih-wilayah"
+                class="form-select"
+                aria-label="Pilih wilayah"
+            >
 
+                <option value="KOTA_SMG">
+                    Rata-rata Kota Semarang
+                </option>
 
+                <option value="KEC_BANYUMANIK">
+                    Kec. Banyumanik
+                </option>
 
+                <option value="KEC_CANDISARI">
+                    Kec. Candisari
+                </option>
 
+                <option value="KEC_GAJAHMUNGKUR">
+                    Kec. Gajahmungkur
+                </option>
 
-            <div
+                <option value="KEC_GAYAMSARI">
+                    Kec. Gayamsari
+                </option>
 
-                style="
+                <option value="KEC_GENUK">
+                    Kec. Genuk
+                </option>
 
-                    visibility:hidden;
+                <option value="KEC_GUNUNGPATI">
+                    Kec. Gunungpati
+                </option>
 
-                    display:flex;
+                <option value="KEC_MIJEN">
+                    Kec. Mijen
+                </option>
 
-                "
+                <option value="KEC_NGALIYAN">
+                    Kec. Ngaliyan
+                </option>
 
-            >
+                <option value="KEC_PEDURUNGAN">
+                    Kec. Pedurungan
+                </option>
 
+                <option value="KEC_SEMARANG_BARAT">
+                    Kec. Semarang Barat
+                </option>
 
+                <option value="KEC_SEMARANG_SELATAN">
+                    Kec. Semarang Selatan
+                </option>
 
-                <button class="nav-icon-btn">
+                <option value="KEC_SEMARANG_TENGAH">
+                    Kec. Semarang Tengah
+                </option>
 
-                    <svg width="18" height="18"></svg>
+                <option value="KEC_SEMARANG_TIMUR">
+                    Kec. Semarang Timur
+                </option>
 
-                </button>
+                <option value="KEC_SEMARANG_UTARA">
+                    Kec. Semarang Utara
+                </option>
 
+                <option value="KEC_TEMBALANG">
+                    Kec. Tembalang
+                </option>
 
+                <option value="KEC_TUGU">
+                    Kec. Tugu
+                </option>
 
-                <button class="nav-icon-btn">
+            </select>
 
-                    <svg width="18" height="18"></svg>
 
-                </button>
+            <select
+                id="filter-tahun"
+                aria-label="Pilih tahun"
+            >
 
+                <option value="">
+                    Pilih Tahun...
+                </option>
 
+                <option value="2026">
+                    2026
+                </option>
 
-            </div>
+            </select>
 
 
+            <select
+                id="filter-bulan"
+                aria-label="Pilih bulan"
+                disabled
+            >
 
+                <option value="">
+                    Pilih Bulan (Opsional)...
+                </option>
 
+                <option value="01">
+                    Januari
+                </option>
 
-            <div class="nav-clock">
+                <option value="02">
+                    Februari
+                </option>
 
+                <option value="03">
+                    Maret
+                </option>
 
+                <option value="04">
+                    April
+                </option>
 
+                <option value="05">
+                    Mei
+                </option>
 
+                <option value="06">
+                    Juni
+                </option>
 
-                <svg
+                <option value="07">
+                    Juli
+                </option>
 
-                    width="16"
+                <option value="08">
+                    Agustus
+                </option>
 
-                    height="16"
+                <option value="09">
+                    September
+                </option>
 
-                    fill="none"
+                <option value="10">
+                    Oktober
+                </option>
 
-                    stroke="currentColor"
+                <option value="11">
+                    November
+                </option>
 
-                    viewBox="0 0 24 24"
+                <option value="12">
+                    Desember
+                </option>
 
-                >
+            </select>
 
 
+            <select
+                id="filter-tanggal"
+                aria-label="Pilih tanggal"
+                disabled
+            >
 
-                    <path
+                <option value="">
+                    Pilih Tanggal (Opsional)...
+                </option>
 
-                        stroke-linecap="round"
+            </select>
 
-                        stroke-linejoin="round"
 
-                        stroke-width="2"
+        </section>
 
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 
-                    ></path>
+        <!-- =================================================
+             REPORT
+             ================================================= -->
 
+        <section
+            class="table-card"
+            id="area-cetak-pdf"
+        >
 
 
-                </svg>
+            <div class="table-header">
 
 
+                <img
+                    src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg"
+                    alt="Logo BMKG"
+                >
 
 
+                <h3>
+                    LAPORAN RIWAYAT PRAKIRAAN CUACA
+                </h3>
 
-                <span id="realtime-clock">
 
-                    --:-- WIB
+                <p id="label-lokasi">
 
-                </span>
+                    Lokasi:
+                    Rata-rata Kota Semarang
 
+                </p>
 
 
+                <p id="label-waktu">
 
+                    Periode Arsip:
+                    Semua Arsip
 
-            </div>
+                </p>
 
 
+            </div>
 
 
+            <!-- =============================================
+                 TABLE WRAPPER
+                 ============================================= -->
 
-        </div>
+            <div class="table-scroll-wrapper">
 
 
+                <table id="tabel-cuaca">
 
 
+                    <thead>
 
-    </nav>
+                        <tr>
 
+                            <th>
+                                Diterbitkan BMKG
+                            </th>
 
+                            <th>
+                                Waktu Prakiraan
+                            </th>
 
+                            <th>
+                                Kondisi Cuaca
+                            </th>
 
+                            <th>
+                                Suhu (°C)
+                            </th>
 
-    <!-- =====================================================
+                            <th>
+                                Kelembapan (%)
+                            </th>
 
-         MAIN CONTENT
+                            <th>
+                                Angin (km/jam)
+                            </th>
 
-         ===================================================== -->
+                            <th>
+                                Arah Angin
+                            </th>
 
+                            <th>
+                                Curah Hujan (mm)
+                            </th>
 
+                        </tr>
 
-    <main class="data-container">
+                    </thead>
 
 
+                    <tbody id="isi-tabel">
 
 
+                        <tr>
 
-        <!-- =================================================
+                            <td
+                                colspan="8"
+                                style="
+                                    text-align:center;
+                                    color:#94a3b8;
+                                    padding:40px;
+                                "
+                            >
 
-             HEADER
+                                Memuat arsip prakiraan BMKG...
 
-             ================================================= -->
+                            </td>
 
+                        </tr>
 
 
-        <div class="header-action">
+                    </tbody>
 
 
+                </table>
 
 
+            </div>
 
-            <h2>
 
-                Arsip Prakiraan Cuaca
+            <!-- =============================================
+                 FOOTER
+                 ============================================= -->
 
-            </h2>
+            <div class="print-footer">
 
 
+                <div>
 
+                    Dicetak pada:
 
+                    <strong id="waktu-cetak">
+                        --/--/----
+                    </strong>
 
-            <button
+                </div>
 
-                id="btn-cetak-pdf"
 
-                class="btn-print"
+                <div>
 
-            >
+                    <strong>
+                        Sumber Data:
+                    </strong>
 
+                    Badan Meteorologi,
+                    Klimatologi,
+                    dan Geofisika (BMKG)
 
+                </div>
 
-                <svg
 
-                    width="18"
+            </div>
 
-                    height="18"
 
-                    fill="none"
+        </section>
 
-                    stroke="currentColor"
 
-                    viewBox="0 0 24 24"
+    </main>
 
-                >
 
+    <!-- =====================================================
+         SUPABASE
+         ===================================================== -->
 
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
 
-                    <path
 
-                        stroke-linecap="round"
+    <!-- =====================================================
+         PDF
 
-                        stroke-linejoin="round"
+         Menggunakan jsPDF + AutoTable.
+         TIDAK memakai html2pdf lagi.
+         ===================================================== -->
 
-                        stroke-width="2"
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+    ></script>
 
-                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
 
-                    ></path>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"
+    ></script>
 
 
+    <!-- =====================================================
+         THEME
 
-                </svg>
+         Harus sebelum data.js.
+         ===================================================== -->
 
+    <script src="theme.js"></script>
 
 
-                Cetak ke PDF
+    <!-- =====================================================
+         DATA RIWAYAT
+         ===================================================== -->
 
+    <script src="data.js"></script>
 
 
-            </button>
+    <!-- =====================================================
+         JAM REALTIME
+         ===================================================== -->
 
+    <script>
 
+        function updateClock() {
 
 
+            const now =
+                new Date();
 
-        </div>
 
+            const timeString =
+                now
+                    .toLocaleTimeString(
+                        'id-ID',
+                        {
+                            timeZone:
+                                'Asia/Jakarta',
 
+                            hour:
+                                '2-digit',
 
+                            minute:
+                                '2-digit'
+                        }
+                    )
+                    .replace(
+                        ':',
+                        '.'
+                    );
 
 
-        <!-- =================================================
+            const realtimeClock =
+                document.getElementById(
+                    'realtime-clock'
+                );
 
-             FILTER
 
-             ================================================= -->
+            if (
+                realtimeClock
+            ) {
 
+                realtimeClock.textContent =
+                    timeString +
+                    ' WIB';
+            }
 
 
-        <section class="filter-card">
+            const waktuCetak =
+                document.getElementById(
+                    'waktu-cetak'
+                );
 
 
+            if (
+                waktuCetak
+            ) {
 
+                const tanggal =
+                    now
+                        .toLocaleDateString(
+                            'id-ID',
+                            {
+                                timeZone:
+                                    'Asia/Jakarta',
 
+                                weekday:
+                                    'long',
 
-            <select
+                                day:
+                                    '2-digit',
 
-                id="pilih-wilayah"
+                                month:
+                                    'long',
 
-                class="form-select"
+                                year:
+                                    'numeric'
+                            }
+                        );
 
-                aria-label="Pilih wilayah"
 
-            >
+                waktuCetak.textContent =
+                    tanggal
+                    +
+                    ' - '
+                    +
+                    timeString
+                    +
+                    ' WIB';
+            }
 
+        }
 
 
-                <option value="KOTA_SMG">
+        updateClock();
 
-                    Rata-rata Kota Semarang
 
-                </option>
+        setInterval(
+            updateClock,
+            1000
+        );
 
-
-
-                <option value="KEC_BANYUMANIK">
-
-                    Kec. Banyumanik
-
-                </option>
-
-
-
-                <option value="KEC_CANDISARI">
-
-                    Kec. Candisari
-
-                </option>
-
-
-
-                <option value="KEC_GAJAHMUNGKUR">
-
-                    Kec. Gajahmungkur
-
-                </option>
-
-
-
-                <option value="KEC_GAYAMSARI">
-
-                    Kec. Gayamsari
-
-                </option>
-
-
-
-                <option value="KEC_GENUK">
-
-                    Kec. Genuk
-
-                </option>
-
-
-
-                <option value="KEC_GUNUNGPATI">
-
-                    Kec. Gunungpati
-
-                </option>
-
-
-
-                <option value="KEC_MIJEN">
-
-                    Kec. Mijen
-
-                </option>
-
-
-
-                <option value="KEC_NGALIYAN">
-
-                    Kec. Ngaliyan
-
-                </option>
-
-
-
-                <option value="KEC_PEDURUNGAN">
-
-                    Kec. Pedurungan
-
-                </option>
-
-
-
-                <option value="KEC_SEMARANG_BARAT">
-
-                    Kec. Semarang Barat
-
-                </option>
-
-
-
-                <option value="KEC_SEMARANG_SELATAN">
-
-                    Kec. Semarang Selatan
-
-                </option>
-
-
-
-                <option value="KEC_SEMARANG_TENGAH">
-
-                    Kec. Semarang Tengah
-
-                </option>
-
-
-
-                <option value="KEC_SEMARANG_TIMUR">
-
-                    Kec. Semarang Timur
-
-                </option>
-
-
-
-                <option value="KEC_SEMARANG_UTARA">
-
-                    Kec. Semarang Utara
-
-                </option>
-
-
-
-                <option value="KEC_TEMBALANG">
-
-                    Kec. Tembalang
-
-                </option>
-
-
-
-                <option value="KEC_TUGU">
-
-                    Kec. Tugu
-
-                </option>
-
-
-
-            </select>
-
-
-
-
-
-            <select
-
-                id="filter-tahun"
-
-                aria-label="Pilih tahun"
-
-            >
-
-
-
-                <option value="">
-
-                    Pilih Tahun...
-
-                </option>
-
-
-
-                <option value="2026">
-
-                    2026
-
-                </option>
-
-
-
-            </select>
-
-
-
-
-
-            <select
-
-                id="filter-bulan"
-
-                aria-label="Pilih bulan"
-
-                disabled
-
-            >
-
-
-
-                <option value="">
-
-                    Pilih Bulan (Opsional)...
-
-                </option>
-
-
-
-                <option value="01">
-
-                    Januari
-
-                </option>
-
-
-
-                <option value="02">
-
-                    Februari
-
-                </option>
-
-
-
-                <option value="03">
-
-                    Maret
-
-                </option>
-
-
-
-                <option value="04">
-
-                    April
-
-                </option>
-
-
-
-                <option value="05">
-
-                    Mei
-
-                </option>
-
-
-
-                <option value="06">
-
-                    Juni
-
-                </option>
-
-
-
-                <option value="07">
-
-                    Juli
-
-                </option>
-
-
-
-                <option value="08">
-
-                    Agustus
-
-                </option>
-
-
-
-                <option value="09">
-
-                    September
-
-                </option>
-
-
-
-                <option value="10">
-
-                    Oktober
-
-                </option>
-
-
-
-                <option value="11">
-
-                    November
-
-                </option>
-
-
-
-                <option value="12">
-
-                    Desember
-
-                </option>
-
-
-
-            </select>
-
-
-
-
-
-            <select
-
-                id="filter-tanggal"
-
-                aria-label="Pilih tanggal"
-
-                disabled
-
-            >
-
-
-
-                <option value="">
-
-                    Pilih Tanggal (Opsional)...
-
-                </option>
-
-
-
-            </select>
-
-
-
-
-
-        </section>
-
-
-
-
-
-        <!-- =================================================
-
-             REPORT
-
-             ================================================= -->
-
-
-
-        <section
-
-            class="table-card"
-
-            id="area-cetak-pdf"
-
-        >
-
-
-
-
-
-            <div class="table-header">
-
-
-
-
-
-                <img
-
-                    src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg"
-
-                    alt="Logo BMKG"
-
-                >
-
-
-
-
-
-                <h3>
-
-                    LAPORAN RIWAYAT PRAKIRAAN CUACA
-
-                </h3>
-
-
-
-
-
-                <p id="label-lokasi">
-
-
-
-                    Lokasi:
-
-                    Rata-rata Kota Semarang
-
-
-
-                </p>
-
-
-
-
-
-                <p id="label-waktu">
-
-
-
-                    Periode Arsip:
-
-                    Semua Arsip
-
-
-
-                </p>
-
-
-
-
-
-            </div>
-
-
-
-
-
-            <!-- =============================================
-
-                 TABLE WRAPPER
-
-                 ============================================= -->
-
-
-
-            <div class="table-scroll-wrapper">
-
-
-
-
-
-                <table id="tabel-cuaca">
-
-
-
-
-
-                    <thead>
-
-
-
-                        <tr>
-
-
-
-                            <th>
-
-                                Diterbitkan BMKG
-
-                            </th>
-
-
-
-                            <th>
-
-                                Waktu Prakiraan
-
-                            </th>
-
-
-
-                            <th>
-
-                                Kondisi Cuaca
-
-                            </th>
-
-
-
-                            <th>
-
-                                Suhu (°C)
-
-                            </th>
-
-
-
-                            <th>
-
-                                Kelembapan (%)
-
-                            </th>
-
-
-
-                            <th>
-
-                                Angin (km/jam)
-
-                            </th>
-
-
-
-                            <th>
-
-                                Arah Angin
-
-                            </th>
-
-
-
-                            <th>
-
-                                Curah Hujan (mm)
-
-                            </th>
-
-
-
-                        </tr>
-
-
-
-                    </thead>
-
-
-
-
-
-                    <tbody id="isi-tabel">
-
-
-
-
-
-                        <tr>
-
-
-
-                            <td
-
-                                colspan="8"
-
-                                style="
-
-                                    text-align:center;
-
-                                    color:#94a3b8;
-
-                                    padding:40px;
-
-                                "
-
-                            >
-
-
-
-                                Memuat arsip prakiraan BMKG...
-
-
-
-                            </td>
-
-
-
-                        </tr>
-
-
-
-
-
-                    </tbody>
-
-
-
-
-
-                </table>
-
-
-
-
-
-            </div>
-
-
-
-
-
-            <!-- =============================================
-
-                 FOOTER
-
-                 ============================================= -->
-
-
-
-            <div class="print-footer">
-
-
-
-
-
-                <div>
-
-
-
-                    Dicetak pada:
-
-
-
-                    <strong id="waktu-cetak">
-
-                        --/--/----
-
-                    </strong>
-
-
-
-                </div>
-
-
-
-
-
-                <div>
-
-
-
-                    <strong>
-
-                        Sumber Data:
-
-                    </strong>
-
-
-
-                    Badan Meteorologi,
-
-                    Klimatologi,
-
-                    dan Geofisika (BMKG)
-
-
-
-                </div>
-
-
-
-
-
-            </div>
-
-
-
-
-
-        </section>
-
-
-
-
-
-    </main>
-
-
-
-
-
-    <!-- =====================================================
-
-         SUPABASE
-
-         ===================================================== -->
-
-
-
-    <script
-
-        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-
-    ></script>
-
-
-
-
-
-    <!-- =====================================================
-
-         PDF
-
-
-
-         Menggunakan jsPDF + AutoTable.
-
-         TIDAK memakai html2pdf lagi.
-
-         ===================================================== -->
-
-
-
-    <script
-
-        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
-
-    ></script>
-
-
-
-
-
-    <script
-
-        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"
-
-    ></script>
-
-
-
-
-
-    <!-- =====================================================
-
-         THEME
-
-
-
-         Harus sebelum data.js.
-
-         ===================================================== -->
-
-
-
-    <script src="theme.js"></script>
-
-
-
-
-
-    <!-- =====================================================
-
-         DATA RIWAYAT
-
-         ===================================================== -->
-
-
-
-    <script src="data.js"></script>
-
-
-
-
-
-    <!-- =====================================================
-
-         JAM REALTIME
-
-         ===================================================== -->
-
-
-
-    <script>
-
-
-
-        function updateClock() {
-
-
-
-
-
-            const now =
-
-                new Date();
-
-
-
-
-
-            const timeString =
-
-                now
-
-                    .toLocaleTimeString(
-
-                        'id-ID',
-
-                        {
-
-                            timeZone:
-
-                                'Asia/Jakarta',
-
-
-
-                            hour:
-
-                                '2-digit',
-
-
-
-                            minute:
-
-                                '2-digit'
-
-                        }
-
-                    )
-
-                    .replace(
-
-                        ':',
-
-                        '.'
-
-                    );
-
-
-
-
-
-            const realtimeClock =
-
-                document.getElementById(
-
-                    'realtime-clock'
-
-                );
-
-
-
-
-
-            if (
-
-                realtimeClock
-
-            ) {
-
-
-
-                realtimeClock.textContent =
-
-                    timeString +
-
-                    ' WIB';
-
-            }
-
-
-
-
-
-            const waktuCetak =
-
-                document.getElementById(
-
-                    'waktu-cetak'
-
-                );
-
-
-
-
-
-            if (
-
-                waktuCetak
-
-            ) {
-
-
-
-                const tanggal =
-
-                    now
-
-                        .toLocaleDateString(
-
-                            'id-ID',
-
-                            {
-
-                                timeZone:
-
-                                    'Asia/Jakarta',
-
-
-
-                                weekday:
-
-                                    'long',
-
-
-
-                                day:
-
-                                    '2-digit',
-
-
-
-                                month:
-
-                                    'long',
-
-
-
-                                year:
-
-                                    'numeric'
-
-                            }
-
-                        );
-
-
-
-
-
-                waktuCetak.textContent =
-
-                    tanggal
-
-                    +
-
-                    ' - '
-
-                    +
-
-                    timeString
-
-                    +
-
-                    ' WIB';
-
-            }
-
-
-
-        }
-
-
-
-
-
-        updateClock();
-
-
-
-
-
-        setInterval(
-
-            updateClock,
-
-            1000
-
-        );
-
-
-
-    </script>
-
-
-
+    </script>
 
 
 </body>
-
-
 
 </html>
