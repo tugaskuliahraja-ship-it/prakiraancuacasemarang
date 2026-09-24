@@ -9,6 +9,42 @@ export default async function handler(req, res) {
 
     try {
 
+        const SUPABASE_URL =
+            process.env.SUPABASE_URL;
+
+        const SUPABASE_KEY =
+            process.env.SUPABASE_KEY;
+
+        if (!SUPABASE_URL || !SUPABASE_KEY) {
+            throw new Error(
+                "Environment Variable Supabase belum terbaca"
+            );
+        }
+
+
+        // ======================================================
+        // PARAMETER BATCH
+        // ======================================================
+
+        const BATCH_SIZE = 40;
+
+        const batch =
+            Math.max(
+                1,
+                parseInt(req.query.batch || "1", 10)
+            );
+
+        const startIndex =
+            (batch - 1) * BATCH_SIZE;
+
+        const endIndex =
+            startIndex + BATCH_SIZE;
+
+
+        // ======================================================
+        // BACA GEOJSON
+        // ======================================================
+
         const protocol =
             req.headers["x-forwarded-proto"] || "https";
 
@@ -17,11 +53,6 @@ export default async function handler(req, res) {
 
         const baseUrl =
             `${protocol}://${host}`;
-
-
-        // ======================================================
-        // BACA GEOJSON KELURAHAN
-        // ======================================================
 
         const geojsonUrl =
             `${baseUrl}/data/Kelurahan%20Semarang.geojson`;
@@ -63,7 +94,27 @@ export default async function handler(req, res) {
 
 
         // ======================================================
-        // HELPER
+        // PILIH DATA SESUAI BATCH
+        // ======================================================
+
+        const batchKelurahan =
+            daftarKelurahan.slice(
+                startIndex,
+                endIndex
+            );
+
+
+        if (batchKelurahan.length === 0) {
+
+            return res.status(400).json({
+                success: false,
+                error: "Batch tidak memiliki data"
+            });
+        }
+
+
+        // ======================================================
+        // HELPER AMBIL PRAKIRAAN
         // ======================================================
 
         function getAllForecasts(data) {
@@ -96,51 +147,23 @@ export default async function handler(req, res) {
         }
 
 
-        function normalizeName(text) {
+        // ======================================================
+        // HASIL
+        // ======================================================
 
-            return String(text || "")
-                .trim()
-                .toUpperCase()
-                .replace(/\s+/g, "_");
-        }
+        const rowsToSave = [];
 
+        const daftarError = [];
 
-        function dominantValue(counter) {
-
-            const entries =
-                Object.entries(counter);
-
-            if (entries.length === 0) {
-                return null;
-            }
-
-            return entries
-                .sort(
-                    (a, b) =>
-                        b[1] - a[1]
-                )[0][0];
-        }
+        let requestBerhasil = 0;
+        let requestGagal = 0;
 
 
         // ======================================================
-        // TEMPAT MENAMPUNG DATA
+        // PROSES SATU-SATU
         // ======================================================
 
-        const dataPerWaktu =
-            new Map();
-
-        let totalBerhasil =
-            0;
-
-        let totalGagal =
-            0;
-const daftarError = [];
-
-        // ======================================================
-        // AMBIL BMKG UNTUK SEMUA KELURAHAN
-        // ======================================================
-
-        for (const item of daftarKelurahan) {
+        for (const item of batchKelurahan) {
 
             try {
 
@@ -153,6 +176,7 @@ const daftarError = [];
                     await fetch(bmkgUrl);
 
                 if (!response.ok) {
+
                     throw new Error(
                         `BMKG ${response.status}`
                     );
@@ -175,393 +199,179 @@ const daftarError = [];
                     }
 
 
-                    const key =
-                        `${weather.analysis_date}|${weather.datetime}`;
+                    rowsToSave.push({
 
+                        adm4:
+                            item.adm4,
 
-                    if (!dataPerWaktu.has(key)) {
+                        kelurahan:
+                            item.kelurahan,
 
-                        dataPerWaktu.set(
-                            key,
-                            {
-                                analysis_date:
-                                    weather.analysis_date,
+                        kecamatan:
+                            item.kecamatan,
 
-                                waktu:
-                                    weather.datetime,
+                        analysis_date:
+                            weather.analysis_date + "Z",
 
-                                kelurahan: []
-                            }
-                        );
-                    }
+                        waktu:
+                            weather.datetime,
 
+                        suhu:
+                            weather.t !== undefined
+                                ? Number(weather.t)
+                                : null,
 
-                    dataPerWaktu
-                        .get(key)
-                        .kelurahan
-                        .push({
-                            kecamatan:
-                                item.kecamatan,
+                        kelembapan:
+                            weather.hu !== undefined
+                                ? Number(weather.hu)
+                                : null,
 
-                            kelurahan:
-                                item.kelurahan,
+                        angin:
+                            weather.ws !== undefined
+                                ? Number(weather.ws)
+                                : null,
 
-                            t:
-                                Number(weather.t),
+                        arah_angin:
+                            weather.wd || null,
 
-                            hu:
-                                Number(weather.hu),
+                        tutupan_awan:
+                            weather.tcc !== undefined
+                                ? Number(weather.tcc)
+                                : null,
 
-                            ws:
-                                Number(weather.ws),
+                        curah_hujan:
+                            weather.tp !== undefined
+                                ? Number(weather.tp)
+                                : null,
 
-                            wd:
-                                weather.wd || null,
-
-                            tcc:
-                                weather.tcc !== undefined
-                                    ? Number(weather.tcc)
-                                    : null,
-
-                            tp:
-                                weather.tp !== undefined
-                                    ? Number(weather.tp)
-                                    : null,
-
-                            kondisi:
-                                weather.weather_desc || null
-                        });
+                        kondisi_cuaca:
+                            weather.weather_desc || null
+                    });
                 });
 
 
-                totalBerhasil++;
+                requestBerhasil++;
 
             }
-catch (error) {
 
-    totalGagal++;
+            catch (error) {
 
-    if (daftarError.length < 10) {
+                requestGagal++;
 
-        daftarError.push({
-            kelurahan: item.kelurahan,
-            adm4: item.adm4,
-            error: error.message
-        });
-    }
+                if (daftarError.length < 10) {
 
-    console.warn(
-        "Gagal:",
-        item.kelurahan,
-        error.message
-    );
-}
+                    daftarError.push({
+                        kelurahan:
+                            item.kelurahan,
+
+                        adm4:
+                            item.adm4,
+
+                        error:
+                            error.message
+                    });
+                }
+            }
         }
 
 
         // ======================================================
-        // AGREGASI
+        // SIMPAN MASSAL KE SUPABASE
         // ======================================================
 
-        const hasilAgregasi =
-            [];
+        let savedRows = 0;
 
 
-        dataPerWaktu.forEach(group => {
+        if (rowsToSave.length > 0) {
 
-            const daftar =
-                group.kelurahan;
+            const supabaseResponse =
+                await fetch(
+                    `${SUPABASE_URL}/rest/v1/cache_prakiraan_kelurahan?on_conflict=adm4,analysis_date,waktu`,
+                    {
+                        method: "POST",
 
+                        headers: {
 
-            // ==================================================
-            // KOTA SEMARANG
-            // ==================================================
+                            "Content-Type":
+                                "application/json",
 
-            if (daftar.length > 0) {
+                            "apikey":
+                                SUPABASE_KEY,
 
-                let sumT = 0;
-                let sumHu = 0;
-                let sumWs = 0;
-                let sumTcc = 0;
-                let sumTp = 0;
+                            "Authorization":
+                                `Bearer ${SUPABASE_KEY}`,
 
-                let countTcc = 0;
-                let countTp = 0;
+                            "Prefer":
+                                "resolution=merge-duplicates"
+                        },
 
-                const kondisiCounter = {};
-                const arahCounter = {};
-
-
-                daftar.forEach(item => {
-
-                    sumT += item.t;
-                    sumHu += item.hu;
-                    sumWs += item.ws;
-
-                    if (item.tcc !== null) {
-                        sumTcc += item.tcc;
-                        countTcc++;
-                    }
-
-                    if (item.tp !== null) {
-                        sumTp += item.tp;
-                        countTp++;
-                    }
-
-                    if (item.kondisi) {
-                        kondisiCounter[item.kondisi] =
-                            (kondisiCounter[item.kondisi] || 0) + 1;
-                    }
-
-                    if (item.wd) {
-                        arahCounter[item.wd] =
-                            (arahCounter[item.wd] || 0) + 1;
-                    }
-                });
-
-
-                hasilAgregasi.push({
-
-                    kode_wilayah:
-                        "KOTA_SMG",
-
-                    nama_wilayah:
-                        "Kota Semarang",
-
-                    tingkat_wilayah:
-                        "KOTA",
-
-                    analysis_date:
-                        group.analysis_date + "Z",
-
-                    waktu:
-                        group.waktu,
-
-                    suhu:
-                        Math.round(
-                            sumT / daftar.length
-                        ),
-
-                    kelembapan:
-                        Math.round(
-                            sumHu / daftar.length
-                        ),
-
-                    angin:
-                        Math.round(
-                            (sumWs / daftar.length) * 10
-                        ) / 10,
-
-                    arah_angin:
-                        dominantValue(
-                            arahCounter
-                        ),
-
-                    tutupan_awan:
-                        countTcc > 0
-                            ? Math.round(
-                                sumTcc / countTcc
+                        body:
+                            JSON.stringify(
+                                rowsToSave
                             )
-                            : null,
+                    }
+                );
 
-                    curah_hujan:
-                        countTp > 0
-                            ? Math.round(
-                                (sumTp / countTp) * 100
-                            ) / 100
-                            : null,
 
-                    kondisi_cuaca:
-                        dominantValue(
-                            kondisiCounter
-                        )
-                });
+            if (!supabaseResponse.ok) {
+
+                const errorText =
+                    await supabaseResponse.text();
+
+                throw new Error(
+                    `Supabase ${supabaseResponse.status}: ${errorText}`
+                );
             }
 
 
-            // ==================================================
-            // KELOMPOKKAN PER KECAMATAN
-            // ==================================================
-
-            const kecamatanMap =
-                new Map();
-
-
-            daftar.forEach(item => {
-
-                const key =
-                    item.kecamatan;
-
-                if (!kecamatanMap.has(key)) {
-                    kecamatanMap.set(
-                        key,
-                        []
-                    );
-                }
-
-                kecamatanMap
-                    .get(key)
-                    .push(item);
-            });
-
-
-            kecamatanMap.forEach(
-                (items, namaKecamatan) => {
-
-                    let sumT = 0;
-                    let sumHu = 0;
-                    let sumWs = 0;
-                    let sumTcc = 0;
-                    let sumTp = 0;
-
-                    let countTcc = 0;
-                    let countTp = 0;
-
-                    const kondisiCounter = {};
-                    const arahCounter = {};
-
-
-                    items.forEach(item => {
-
-                        sumT += item.t;
-                        sumHu += item.hu;
-                        sumWs += item.ws;
-
-                        if (item.tcc !== null) {
-                            sumTcc += item.tcc;
-                            countTcc++;
-                        }
-
-                        if (item.tp !== null) {
-                            sumTp += item.tp;
-                            countTp++;
-                        }
-
-                        if (item.kondisi) {
-                            kondisiCounter[item.kondisi] =
-                                (kondisiCounter[item.kondisi] || 0) + 1;
-                        }
-
-                        if (item.wd) {
-                            arahCounter[item.wd] =
-                                (arahCounter[item.wd] || 0) + 1;
-                        }
-                    });
-
-
-                    hasilAgregasi.push({
-
-                        kode_wilayah:
-                            "KEC_" +
-                            normalizeName(
-                                namaKecamatan
-                            ),
-
-                        nama_wilayah:
-                            namaKecamatan,
-
-                        tingkat_wilayah:
-                            "KECAMATAN",
-
-                        analysis_date:
-                            group.analysis_date + "Z",
-
-                        waktu:
-                            group.waktu,
-
-                        suhu:
-                            Math.round(
-                                sumT / items.length
-                            ),
-
-                        kelembapan:
-                            Math.round(
-                                sumHu / items.length
-                            ),
-
-                        angin:
-                            Math.round(
-                                (sumWs / items.length) * 10
-                            ) / 10,
-
-                        arah_angin:
-                            dominantValue(
-                                arahCounter
-                            ),
-
-                        tutupan_awan:
-                            countTcc > 0
-                                ? Math.round(
-                                    sumTcc / countTcc
-                                )
-                                : null,
-
-                        curah_hujan:
-                            countTp > 0
-                                ? Math.round(
-                                    (sumTp / countTp) * 100
-                                ) / 100
-                                : null,
-
-                        kondisi_cuaca:
-                            dominantValue(
-                                kondisiCounter
-                            )
-                    });
-                }
-            );
-        });
+            savedRows =
+                rowsToSave.length;
+        }
 
 
         // ======================================================
-        // HASIL TEST
+        // RESPONSE
         // ======================================================
-
-        const kodeWilayahUnik =
-            [
-                ...new Set(
-                    hasilAgregasi.map(
-                        item =>
-                            item.kode_wilayah
-                    )
-                )
-            ];
-
 
         return res.status(200).json({
 
             success: true,
 
             message:
-                "Agregasi BMKG berhasil",
+                "Batch BMKG berhasil diproses",
+
+            batch:
+                batch,
+
+            batch_size:
+                BATCH_SIZE,
+
+            index_awal:
+                startIndex,
+
+            index_akhir:
+                Math.min(
+                    endIndex,
+                    daftarKelurahan.length
+                ),
 
             total_kelurahan:
                 daftarKelurahan.length,
 
+            kelurahan_batch:
+                batchKelurahan.length,
+
             request_berhasil:
-                totalBerhasil,
+                requestBerhasil,
 
             request_gagal:
-                totalGagal,
-            
+                requestGagal,
+
+            rows_disimpan:
+                savedRows,
+
             contoh_error:
-                daftarError,
-
-            total_waktu:
-                dataPerWaktu.size,
-
-            total_wilayah:
-                kodeWilayahUnik.length,
-
-            wilayah:
-                kodeWilayahUnik,
-
-            total_record_hasil:
-                hasilAgregasi.length,
-
-            contoh_data:
-                hasilAgregasi.slice(0, 10)
-
+                daftarError
         });
 
     }
