@@ -1,253 +1,468 @@
 <!DOCTYPE html>
+
 <html lang="id">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebGIS Prakiraan Cuaca Semarang</title>
 
-    <!-- Font: Plus Jakarta Sans -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
 
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <title>WebGIS Prakiraan Cuaca Semarang</title>
+
+
+
+    <!-- Font: Plus Jakarta Sans -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+
+    <!-- Leaflet CSS -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+
+
+    <!-- Custom CSS -->
+
+    <link rel="stylesheet" href="style.css">
+
 </head>
+
+
 
 <body>
 
-    <!-- Navigasi Atas (Navbar) -->
-    <nav class="top-navbar">
-        <!-- Kiri: Logo & Tab -->
-        <div class="nav-left">
-            <div class="brand">
-                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG" class="brand-logo">
-                <div class="brand-text">
-                    <span class="brand-title">Prakiraan Cuaca</span>
-                    <span class="brand-subtitle">Kota Semarang</span>
-                </div>
-            </div>
-            <div class="nav-tabs">
-    <button class="nav-tab">
 
-        
-        <!-- Ikon Overview -->
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+
+    <!-- Navigasi Atas (Navbar) -->
+
+    <nav class="top-navbar">
+
+        <!-- Kiri: Logo & Tab -->
+
+        <div class="nav-left">
+
+            <div class="brand">
+
+                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG" class="brand-logo">
+
+                <div class="brand-text">
+
+                    <span class="brand-title">Prakiraan Cuaca</span>
+
+                    <span class="brand-subtitle">Kota Semarang</span>
+
+                </div>
+
+            </div>
+
+            <div class="nav-tabs">
     <button class="nav-tab" onclick="window.location.href='overview.html'" style="cursor:pointer;">
-    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
-        </path>
-    </svg>
-    Overview
-</button>
-    
-    <!-- Tombol Peta Cuaca (Aktif) -->
-    <button class="nav-tab active">
-        <!-- Ikon Map -->
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+        </svg>
+        Overview
+    </button>
+    <button class="nav-tab active" onclick="window.location.href='index.html'" style="cursor:pointer;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+        </svg>
         Peta Cuaca
     </button>
-    
-    <!-- Tombol Riwayat Data (Pasif, memanggil data.html) -->
-    <button class="nav-tab" onclick="window.location.href='data.html'">
-        <!-- Ikon Dokumen Laporan -->
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+    <button class="nav-tab" onclick="window.location.href='data.html'" style="cursor:pointer;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
         Riwayat Data
     </button>
 </div>
-        </div>
 
-        <!-- Tengah: Pencarian -->
-        <div class="nav-center">
-            <div class="search-bar">
-                <svg width="16" height="16" fill="none" stroke="#64748B" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" placeholder="Cari Kecamatan atau Kelurahan...">
-            </div>
-        </div>
+        </div>
 
-        <!-- Kanan: Layer, Legenda, & Jam -->
-        <div class="nav-right">
-            <!-- Dropdown Layer Peta -->
-            <div class="nav-dropdown-container">
-                <button class="nav-icon-btn" id="btn-layer" title="Layer Peta">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-                <div class="dropdown-menu" id="layer-menu">
-                    <h4>Pilihan Basemap</h4>
+
+
+        <!-- Tengah: Pencarian -->
+
+        <div class="nav-center">
+
+            <div class="search-bar">
+
+                <svg width="16" height="16" fill="none" stroke="#64748B" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+
+                <input type="text" placeholder="Cari Kecamatan atau Kelurahan...">
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Kanan: Layer, Legenda, & Jam -->
+
+        <div class="nav-right">
+
+            <!-- Dropdown Layer Peta -->
+
+            <div class="nav-dropdown-container">
+
+                <button class="nav-icon-btn" id="btn-layer" title="Layer Peta">
+
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+
+                </button>
+
+                <div class="dropdown-menu" id="layer-menu">
+
+                    <h4>Pilihan Basemap</h4>
+
+
 
 <label>
-    <input
-        type="radio"
-        name="basemap"
-        value="auto"
-        checked
-    >
-    OSM Otomatis Light / Dark
+
+    <input
+
+        type="radio"
+
+        name="basemap"
+
+        value="auto"
+
+        checked
+
+    >
+
+    OSM Otomatis Light / Dark
+
 </label>
+
+
 
 <label>
-    <input
-        type="radio"
-        name="basemap"
-        value="osm"
-    >
-    Standar OSM
+
+    <input
+
+        type="radio"
+
+        name="basemap"
+
+        value="osm"
+
+    >
+
+    Standar OSM
+
 </label>
+
+
 
 <label>
-    <input
-        type="radio"
-        name="basemap"
-        value="esri"
-    >
-    Satelit Esri
+
+    <input
+
+        type="radio"
+
+        name="basemap"
+
+        value="esri"
+
+    >
+
+    Satelit Esri
+
 </label>
-                    <hr>
-                    <h4>Tingkat Administratif</h4>
-                    <label><input type="radio" name="admin_level" value="kecamatan" checked> Kecamatan</label>
-                    <label><input type="radio" name="admin_level" value="kelurahan"> Kelurahan</label>
-                </div>
-            </div>
 
-            <!-- Dropdown Legenda Cuaca -->
-            <div class="nav-dropdown-container">
-                <button class="nav-icon-btn" id="btn-legend" title="Legenda Cuaca">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                </button>
-                <div class="dropdown-menu" id="legend-menu">
-                    <h4>Legenda Cuaca</h4>
-                    <div class="legend-item"><span class="color-box" style="background:#0F172A"></span> Petir / Kilat</div>
-                    <div class="legend-item"><span class="color-box" style="background:#1d4ed8"></span> Hujan Lebat</div>
-                    <div class="legend-item"><span class="color-box" style="background:#2563eb"></span> Hujan Sedang</div>
-                    <div class="legend-item"><span class="color-box" style="background:#38bdf8"></span> Hujan Ringan</div>
-                    <div class="legend-item"><span class="color-box" style="background:#475569"></span> Mendung / Tebal</div>
-                    <div class="legend-item"><span class="color-box" style="background:#64748b"></span> Berawan</div>
-                    <div class="legend-item"><span class="color-box" style="background:#f59e0b"></span> Cerah Berawan</div>
-                    <div class="legend-item"><span class="color-box" style="background:#facc15"></span> Cerah</div>
-                </div>
-            </div>
+                    <hr>
 
-            <!-- Jam Realtime -->
-            <div class="nav-clock">
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span id="realtime-clock">--:-- WIB</span>
-            </div>
-        </div>
-    </nav>
+                    <h4>Tingkat Administratif</h4>
 
-    <!-- Kontainer Peta dan Elemen Lainnya -->
-    <div class="main-container">
-        
-        <div id="map"></div>
+                    <label><input type="radio" name="admin_level" value="kecamatan" checked> Kecamatan</label>
 
-        <div id="weather-loading">
-            Memuat data BMKG...
-            <span id="weather-progress">0/0</span>
-        </div>
+                    <label><input type="radio" name="admin_level" value="kelurahan"> Kelurahan</label>
 
-        <!<!-- Panel Informasi Mengambang (Kiri) -->
-        <aside class="side-panel">
-            <div class="panel-header">
-                <h3>INFORMASI CUACA</h3>
-                <p>Rata-rata Kota Semarang</p>
-            </div>
-            
-            <div class="weather-main-info">
-                <div class="temp-large" id="city-temp">--°C</div>
-                <div class="weather-desc" id="city-desc">Memuat Data...</div>
-                <div class="weather-time" id="city-time">--.-- WIB</div>
-            </div>
+                </div>
 
-            <!-- Parameter Cuaca -->
-            <div class="weather-metrics">
-                <div class="metric-box">
-                    <span class="metric-icon">💧</span>
-                    <span class="metric-val" id="city-humidity">--%</span>
-                    <span class="metric-lbl">Kelembapan</span>
-                </div>
-                <div class="metric-box">
-                    <span class="metric-icon">💨</span>
-                    <span class="metric-val" id="city-wind">-- km/jam</span>
-                    <span class="metric-lbl">Kecepatan Angin</span>
-                </div>
-                <div class="metric-box">
-                    <span class="metric-icon">🧭</span>
-                    <span class="metric-val" id="city-wind-dir">--</span>
-                    <span class="metric-lbl">Arah Angin</span>
-                </div>
-                <div class="metric-box">
-                    <span class="metric-icon">☁️</span>
-                    <span class="metric-val" id="city-cloud">--%</span>
-                    <span class="metric-lbl">Tutupan Awan</span>
-                </div>
-            </div>
+            </div>
 
-            <!-- Prakiraan 3 Hari Ke Depan -->
-            <div class="forecast-section">
-                <h4>Prakiraan 3 Hari Ke Depan</h4>
-                <div class="forecast-cards" id="city-3day-container">
-                    <!-- Akan diisi oleh JavaScript nanti -->
-                </div>
-            </div>
 
-            <!-- Informasi Sumber Data & Logo BMKG -->
-            <div class="panel-footer">
-                <div class="footer-text">
-                    <strong>Sumber:</strong> BMKG<br>
-                    <span id="info-analysis-time">Pembaruan: --</span>
-                </div>
-                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG" class="footer-logo">
-            </div>
-        </aside>
 
-        <!-- Timeline Lama -->
-        <div id="forecast-timeline">
-            <div id="timeline-day-control">
-                <button id="timeline-prev-day" aria-label="Hari sebelumnya">‹</button>
-                <div id="timeline-date">-</div>
-                <button id="timeline-next-day" aria-label="Hari berikutnya">›</button>
-            </div>
-            <div id="timeline-hours"></div>
-        </div>
+            <!-- Dropdown Legenda Cuaca -->
 
-    </div>
+            <div class="nav-dropdown-container">
 
-    <!-- Leaflet JS & App JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+                <button class="nav-icon-btn" id="btn-legend" title="Legenda Cuaca">
 
-    <script src="theme.js"></script>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+
+                </button>
+
+                <div class="dropdown-menu" id="legend-menu">
+
+                    <h4>Legenda Cuaca</h4>
+
+                    <div class="legend-item"><span class="color-box" style="background:#0F172A"></span> Petir / Kilat</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#1d4ed8"></span> Hujan Lebat</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#2563eb"></span> Hujan Sedang</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#38bdf8"></span> Hujan Ringan</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#475569"></span> Mendung / Tebal</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#64748b"></span> Berawan</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#f59e0b"></span> Cerah Berawan</div>
+
+                    <div class="legend-item"><span class="color-box" style="background:#facc15"></span> Cerah</div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Jam Realtime -->
+
+            <div class="nav-clock">
+
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+
+                <span id="realtime-clock">--:-- WIB</span>
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- Kontainer Peta dan Elemen Lainnya -->
+
+    <div class="main-container">
+
+
+
+        <div id="map"></div>
+
+
+
+        <div id="weather-loading">
+
+            Memuat data BMKG...
+
+            <span id="weather-progress">0/0</span>
+
+        </div>
+
+
+
+        <!-- Panel Informasi Mengambang (Kiri) -->
+
+        <aside class="side-panel">
+
+            <div class="panel-header">
+
+                <h3>INFORMASI CUACA</h3>
+
+                <p>Rata-rata Kota Semarang</p>
+
+            </div>
+
+
+
+            <div class="weather-main-info">
+
+                <div class="temp-large" id="city-temp">--°C</div>
+
+                <div class="weather-desc" id="city-desc">Memuat Data...</div>
+
+                <div class="weather-time" id="city-time">--.-- WIB</div>
+
+            </div>
+
+
+
+            <!-- Parameter Cuaca -->
+
+            <div class="weather-metrics">
+
+                <div class="metric-box">
+
+                    <span class="metric-icon">💧</span>
+
+                    <span class="metric-val" id="city-humidity">--%</span>
+
+                    <span class="metric-lbl">Kelembapan</span>
+
+                </div>
+
+                <div class="metric-box">
+
+                    <span class="metric-icon">💨</span>
+
+                    <span class="metric-val" id="city-wind">-- km/jam</span>
+
+                    <span class="metric-lbl">Kecepatan Angin</span>
+
+                </div>
+
+                <div class="metric-box">
+
+                    <span class="metric-icon">🧭</span>
+
+                    <span class="metric-val" id="city-wind-dir">--</span>
+
+                    <span class="metric-lbl">Arah Angin</span>
+
+                </div>
+
+                <div class="metric-box">
+
+                    <span class="metric-icon">☁️</span>
+
+                    <span class="metric-val" id="city-cloud">--%</span>
+
+                    <span class="metric-lbl">Tutupan Awan</span>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Prakiraan 3 Hari Ke Depan -->
+
+            <div class="forecast-section">
+
+                <h4>Prakiraan 3 Hari Ke Depan</h4>
+
+                <div class="forecast-cards" id="city-3day-container">
+
+                    <!-- Akan diisi oleh JavaScript nanti -->
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Informasi Sumber Data & Logo BMKG -->
+
+            <div class="panel-footer">
+
+                <div class="footer-text">
+
+                    <strong>Sumber:</strong> BMKG<br>
+
+                    <span id="info-analysis-time">Pembaruan: --</span>
+
+                </div>
+
+                <img src="https://data.bmkg.go.id/include/assets/img/logo-bmkg.svg" alt="Logo BMKG" class="footer-logo">
+
+            </div>
+
+        </aside>
+
+
+
+        <!-- Timeline Lama -->
+
+        <div id="forecast-timeline">
+
+            <div id="timeline-day-control">
+
+                <button id="timeline-prev-day" aria-label="Hari sebelumnya">‹</button>
+
+                <div id="timeline-date">-</div>
+
+                <button id="timeline-next-day" aria-label="Hari berikutnya">›</button>
+
+            </div>
+
+            <div id="timeline-hours"></div>
+
+        </div>
+
+
+
+    </div>
+
+
+
+    <!-- Leaflet JS & App JS -->
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+
+
+    <script src="theme.js"></script>
+
 <script src="app.js"></script>
 
-    <!-- Script sementara untuk animasi dropdown di HTML -->
-    <script>
-        // Update Jam Realtime Navbar
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(':', '.');
-            document.getElementById('realtime-clock').innerText = timeString + ' WIB';
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // Dropdown Toggle Logic
-        document.getElementById('btn-layer').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('layer-menu').classList.toggle('show');
-            document.getElementById('legend-menu').classList.remove('show');
-        });
-        document.getElementById('btn-legend').addEventListener('click', (e) => {
-            e.stopPropagation();
-            document.getElementById('legend-menu').classList.toggle('show');
-            document.getElementById('layer-menu').classList.remove('show');
-        });
-        document.addEventListener('click', () => {
-            document.getElementById('layer-menu').classList.remove('show');
-            document.getElementById('legend-menu').classList.remove('show');
-        });
-    </script>
+
+    <!-- Script sementara untuk animasi dropdown di HTML -->
+
+    <script>
+
+        // Update Jam Realtime Navbar
+
+        function updateClock() {
+
+            const now = new Date();
+
+            const timeString = now.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' }).replace(':', '.');
+
+            document.getElementById('realtime-clock').innerText = timeString + ' WIB';
+
+        }
+
+        setInterval(updateClock, 1000);
+
+        updateClock();
+
+
+
+        // Dropdown Toggle Logic
+
+        document.getElementById('btn-layer').addEventListener('click', (e) => {
+
+            e.stopPropagation();
+
+            document.getElementById('layer-menu').classList.toggle('show');
+
+            document.getElementById('legend-menu').classList.remove('show');
+
+        });
+
+        document.getElementById('btn-legend').addEventListener('click', (e) => {
+
+            e.stopPropagation();
+
+            document.getElementById('legend-menu').classList.toggle('show');
+
+            document.getElementById('layer-menu').classList.remove('show');
+
+        });
+
+        document.addEventListener('click', () => {
+
+            document.getElementById('layer-menu').classList.remove('show');
+
+            document.getElementById('legend-menu').classList.remove('show');
+
+        });
+
+    </script>
+
 </body>
+
 </html>
