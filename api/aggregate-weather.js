@@ -271,15 +271,12 @@ cacheData.forEach(row => {
         // HASIL AGREGASI
         // ======================================================
 
-        const hasilAgregasi =
-            [];
+    groupMap.forEach(group => {
 
-
-        groupMap.forEach(group => {
-
-            const rows =
-                group.rows;
-
+    const rows =
+        Array.from(
+            group.rowsByAdm4.values()
+        );
 
             // ==================================================
             // AGREGASI KOTA
