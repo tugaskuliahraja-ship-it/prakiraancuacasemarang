@@ -157,27 +157,43 @@
                 <p id="label-waktu" style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Periode: Belum Dipilih</p>
             </div>
 
-            <table id="tabel-cuaca">
-                <thead>
-                    <tr>
-    <th>Diterbitkan BMKG</th>
-    <th>Waktu Prakiraan</th>
-    <th>Kondisi Cuaca</th>
-    <th>Suhu (°C)</th>
-    <th>Kelembapan (%)</th>
-    <th>Angin (km/jam)</th>
-    <th>Arah Angin</th>
-    <th>Curah Hujan (mm)</th>
-</tr>
-                </thead>
-                <tbody id="isi-tabel">
-                    <tr>
-                        <td colspan="8" style="text-align: center; color: #94a3b8; padding: 40px;">
-                            Silakan pilih tahun pada kotak filter di atas untuk memuat data riwayat.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+           <div class="table-scroll-wrapper">
+
+    <table id="tabel-cuaca">
+
+        <thead>
+            <tr>
+                <th>Diterbitkan BMKG</th>
+                <th>Waktu Prakiraan</th>
+                <th>Kondisi Cuaca</th>
+                <th>Suhu (°C)</th>
+                <th>Kelembapan (%)</th>
+                <th>Angin (km/jam)</th>
+                <th>Arah Angin</th>
+                <th>Curah Hujan (mm)</th>
+            </tr>
+        </thead>
+
+        <tbody id="isi-tabel">
+
+            <tr>
+                <td
+                    colspan="8"
+                    style="
+                        text-align:center;
+                        color:#94a3b8;
+                        padding:40px;
+                    "
+                >
+                    Memuat arsip prakiraan BMKG...
+                </td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
 
             <div class="print-footer">
                 <div>Dicetak pada: <strong id="waktu-cetak">--/--/----</strong></div>
