@@ -141,40 +141,130 @@ if (cacheData.length === 0) {
         }
 
 
-        // ======================================================
-        // KELOMPOKKAN BERDASARKAN ANALYSIS_DATE + WAKTU
-        // ======================================================
+       // ======================================================
+// NORMALISASI SLOT PRAKIRAAN 3 JAM
+// ======================================================
 
-        const groupMap =
-            new Map();
+const groupMap = new Map();
 
 
-        cacheData.forEach(row => {
+function getForecastSlot(waktu) {
 
-            const key =
-                `${row.analysis_date}|${row.waktu}`;
+    const date =
+        new Date(waktu);
 
-            if (!groupMap.has(key)) {
+    // Contoh:
+    // 15:00 -> 15:00
+    // 16:00 -> 15:00
+    // 18:00 -> 18:00
+    // 19:00 -> 18:00
+    //
+    // Jadi perbedaan 1 jam antar hasil BMKG
+    // tetap masuk ke slot prakiraan yang sama.
 
-                groupMap.set(
-                    key,
-                    {
-                        analysis_date:
-                            row.analysis_date,
+    const utcHour =
+        date.getUTCHours();
 
-                        waktu:
-                            row.waktu,
+    const slotHour =
+        Math.floor(
+            utcHour / 3
+        ) * 3;
 
-                        rows: []
-                    }
-                );
+    date.setUTCHours(
+        slotHour,
+        0,
+        0,
+        0
+    );
+
+    return date.toISOString();
+}
+
+
+cacheData.forEach(row => {
+
+    const slotWaktu =
+        getForecastSlot(
+            row.waktu
+        );
+
+    const key =
+        `${row.analysis_date}|${slotWaktu}`;
+
+
+    if (!groupMap.has(key)) {
+
+        groupMap.set(
+            key,
+            {
+                analysis_date:
+                    row.analysis_date,
+
+                waktu:
+                    slotWaktu,
+
+                rowsByAdm4:
+                    new Map()
             }
+        );
+    }
 
-            groupMap
-                .get(key)
-                .rows
-                .push(row);
-        });
+
+    const group =
+        groupMap.get(key);
+
+
+    const existing =
+        group.rowsByAdm4.get(
+            row.adm4
+        );
+
+
+    // Kalau kelurahan seperti Gedawang atau
+    // Terboyo Wetan mempunyai dua record dalam
+    // slot yang sama, cukup simpan SATU.
+    //
+    // Kita pilih record dengan waktu yang
+    // paling dekat dengan slot + 1 jam,
+    // karena mayoritas 122/177 kelurahan
+    // berasal dari kelompok jam +1.
+
+    if (!existing) {
+
+        group.rowsByAdm4.set(
+            row.adm4,
+            row
+        );
+
+    } else {
+
+        const targetTime =
+            new Date(slotWaktu)
+                .getTime()
+                + (60 * 60 * 1000);
+
+        const existingDistance =
+            Math.abs(
+                new Date(existing.waktu).getTime()
+                - targetTime
+            );
+
+        const newDistance =
+            Math.abs(
+                new Date(row.waktu).getTime()
+                - targetTime
+            );
+
+
+        if (newDistance < existingDistance) {
+
+            group.rowsByAdm4.set(
+                row.adm4,
+                row
+            );
+        }
+    }
+});
 
 
         // ======================================================
