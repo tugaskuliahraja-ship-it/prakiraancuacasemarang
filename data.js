@@ -1,5 +1,5 @@
 // ======================================================
-// KONFIGURASI SUPABASE
+// SUPABASE
 // ======================================================
 
 const SUPABASE_URL =
@@ -12,103 +12,165 @@ let supabaseClient = null;
 
 
 // ======================================================
-// ELEMEN HTML
+// STATE DATA YANG SEDANG DITAMPILKAN
+// ======================================================
+
+let currentTableData = [];
+
+
+// ======================================================
+// ELEMENT
 // ======================================================
 
 const filterWilayah =
-    document.getElementById('pilih-wilayah');
+    document.getElementById(
+        'pilih-wilayah'
+    );
 
 const filterTahun =
-    document.getElementById('filter-tahun');
+    document.getElementById(
+        'filter-tahun'
+    );
 
 const filterBulan =
-    document.getElementById('filter-bulan');
+    document.getElementById(
+        'filter-bulan'
+    );
 
 const filterTanggal =
-    document.getElementById('filter-tanggal');
+    document.getElementById(
+        'filter-tanggal'
+    );
 
 const labelLokasi =
-    document.getElementById('label-lokasi');
+    document.getElementById(
+        'label-lokasi'
+    );
 
 const labelWaktu =
-    document.getElementById('label-waktu');
+    document.getElementById(
+        'label-waktu'
+    );
 
 const btnCetakPDF =
-    document.getElementById('btn-cetak-pdf');
+    document.getElementById(
+        'btn-cetak-pdf'
+    );
 
 
 // ======================================================
-// FORMAT WAKTU WIB
+// FORMAT WIB
 // ======================================================
 
-function formatWaktuIndonesia(value) {
+function formatWaktuIndonesia(
+    value
+) {
 
     if (!value) {
         return '-';
     }
 
+
     const date =
         new Date(value);
 
-    if (Number.isNaN(date.getTime())) {
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
         return '-';
     }
+
 
     return date.toLocaleString(
         'id-ID',
         {
-            timeZone: 'Asia/Jakarta',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+            timeZone:
+                'Asia/Jakarta',
+
+            day:
+                '2-digit',
+
+            month:
+                '2-digit',
+
+            year:
+                'numeric',
+
+            hour:
+                '2-digit',
+
+            minute:
+                '2-digit'
         }
-    ) + ' WIB';
+    )
+    .replace(
+        ':',
+        '.'
+    )
+    + ' WIB';
 }
 
 
 // ======================================================
-// FORMAT NILAI
+// NILAI
 // ======================================================
 
-function tampilNilai(value, suffix = '') {
+function tampilNilai(
+    value,
+    suffix = ''
+) {
 
     if (
         value === null ||
         value === undefined ||
         value === ''
     ) {
+
         return '-';
     }
+
 
     return `${value}${suffix}`;
 }
 
 
 // ======================================================
-// ISI PILIHAN TANGGAL
+// FILTER TANGGAL
 // ======================================================
 
-function isiOpsiTanggal(tahun, bulan) {
+function isiOpsiTanggal(
+    tahun,
+    bulan
+) {
 
     if (!filterTanggal) {
         return;
     }
 
+
     filterTanggal.innerHTML =
         '<option value="">Pilih Tanggal (Opsional)...</option>';
 
-    if (!tahun || !bulan) {
+
+    if (
+        !tahun ||
+        !bulan
+    ) {
         return;
     }
+
 
     const jumlahHari =
         new Date(
             Number(tahun),
             Number(bulan),
             0
-        ).getDate();
+        )
+        .getDate();
+
 
     for (
         let i = 1;
@@ -117,19 +179,35 @@ function isiOpsiTanggal(tahun, bulan) {
     ) {
 
         const tanggal =
-            String(i).padStart(
-                2,
-                '0'
+            String(i)
+                .padStart(
+                    2,
+                    '0'
+                );
+
+
+        const option =
+            document.createElement(
+                'option'
             );
 
-        filterTanggal.innerHTML +=
-            `<option value="${tanggal}">${i}</option>`;
+
+        option.value =
+            tanggal;
+
+        option.textContent =
+            i;
+
+
+        filterTanggal.appendChild(
+            option
+        );
     }
 }
 
 
 // ======================================================
-// ATUR STATUS FILTER
+// UPDATE STATUS FILTER
 // ======================================================
 
 function updateFilterState() {
@@ -142,9 +220,10 @@ function updateFilterState() {
         return;
     }
 
-    // Kalau tahun sudah terpilih,
-    // dropdown bulan LANGSUNG aktif
-    if (filterTahun.value) {
+
+    if (
+        filterTahun.value
+    ) {
 
         filterBulan.disabled =
             false;
@@ -167,16 +246,31 @@ function updateFilterState() {
     }
 
 
-    // Tanggal baru aktif setelah bulan dipilih
-    if (filterBulan.value) {
+    if (
+        filterBulan.value
+    ) {
 
         filterTanggal.disabled =
             false;
+
+
+        const currentDateValue =
+            filterTanggal.value;
+
 
         isiOpsiTanggal(
             filterTahun.value,
             filterBulan.value
         );
+
+
+        if (
+            currentDateValue
+        ) {
+
+            filterTanggal.value =
+                currentDateValue;
+        }
 
     } else {
 
@@ -190,7 +284,66 @@ function updateFilterState() {
 
 
 // ======================================================
-// MUAT DATA TABEL
+// LABEL PERIODE
+// ======================================================
+
+function getPeriodeLabel() {
+
+    const tahun =
+        filterTahun?.value || '';
+
+    const bulan =
+        filterBulan?.value || '';
+
+    const tanggal =
+        filterTanggal?.value || '';
+
+
+    if (
+        tahun &&
+        bulan &&
+        tanggal
+    ) {
+
+        return (
+            `${tanggal}-${bulan}-${tahun}`
+        );
+    }
+
+
+    if (
+        tahun &&
+        bulan
+    ) {
+
+        const namaBulan =
+            filterBulan.options[
+                filterBulan.selectedIndex
+            ].text;
+
+
+        return (
+            `${namaBulan} ${tahun}`
+        );
+    }
+
+
+    if (tahun) {
+
+        return (
+            `Tahun ${tahun}`
+        );
+    }
+
+
+    return (
+        'Semua Arsip'
+    );
+}
+
+
+// ======================================================
+// MUAT DATA
 // ======================================================
 
 async function muatDataTabel() {
@@ -199,6 +352,7 @@ async function muatDataTabel() {
         document.getElementById(
             'isi-tabel'
         );
+
 
     if (!tbody) {
         return;
@@ -209,14 +363,15 @@ async function muatDataTabel() {
 
         tbody.innerHTML = `
             <tr>
-                <td colspan="8"
+                <td
+                    colspan="8"
                     style="
                         text-align:center;
+                        padding:35px;
                         color:#dc2626;
-                        padding:30px;
                     "
                 >
-                    Supabase belum berhasil diinisialisasi.
+                    Supabase belum terhubung.
                 </td>
             </tr>
         `;
@@ -239,13 +394,16 @@ async function muatDataTabel() {
 
 
     const tahun =
-        filterTahun?.value || '';
+        filterTahun?.value
+        || '';
 
     const bulan =
-        filterBulan?.value || '';
+        filterBulan?.value
+        || '';
 
     const tanggal =
-        filterTanggal?.value || '';
+        filterTanggal?.value
+        || '';
 
 
     // ==================================================
@@ -261,48 +419,19 @@ async function muatDataTabel() {
 
     if (labelWaktu) {
 
-        if (
-            tahun &&
-            bulan &&
-            tanggal
-        ) {
-
-            labelWaktu.textContent =
-                `Tanggal arsip BMKG: ${tanggal}-${bulan}-${tahun}`;
-
-        } else if (
-            tahun &&
-            bulan
-        ) {
-
-            const namaBulan =
-                filterBulan.options[
-                    filterBulan.selectedIndex
-                ].text;
-
-            labelWaktu.textContent =
-                `Arsip BMKG: ${namaBulan} ${tahun}`;
-
-        } else if (tahun) {
-
-            labelWaktu.textContent =
-                `Arsip BMKG Tahun ${tahun}`;
-
-        } else {
-
-            labelWaktu.textContent =
-                'Arsip prakiraan BMKG';
-        }
+        labelWaktu.textContent =
+            `Periode Arsip: ${getPeriodeLabel()}`;
     }
 
 
     tbody.innerHTML = `
         <tr>
-            <td colspan="8"
+            <td
+                colspan="8"
                 style="
                     text-align:center;
-                    padding:30px;
-                    color:#64748b;
+                    padding:35px;
+                    color:#94a3b8;
                 "
             >
                 Memuat arsip prakiraan BMKG...
@@ -312,12 +441,14 @@ async function muatDataTabel() {
 
 
     // ==================================================
-    // QUERY DASAR
+    // QUERY
     // ==================================================
 
     let kueri =
         supabaseClient
-            .from('riwayat_cuaca')
+            .from(
+                'riwayat_cuaca'
+            )
             .select(`
                 kode_wilayah,
                 nama_wilayah,
@@ -344,7 +475,7 @@ async function muatDataTabel() {
 
 
     // ==================================================
-    // FILTER BERDASARKAN ANALYSIS_DATE
+    // FILTER ANALYSIS_DATE
     // ==================================================
 
     if (tahun) {
@@ -371,15 +502,21 @@ async function muatDataTabel() {
                     Number(tahun),
                     Number(bulan),
                     0
-                ).getDate();
+                )
+                .getDate();
+
 
             rentangAwal =
                 `${tahun}-${bulan}-01T00:00:00+07:00`;
 
+
             rentangAkhir =
                 `${tahun}-${bulan}-${String(
                     hariTerakhir
-                ).padStart(2, '0')}T23:59:59+07:00`;
+                ).padStart(
+                    2,
+                    '0'
+                )}T23:59:59+07:00`;
 
         } else {
 
@@ -409,19 +546,21 @@ async function muatDataTabel() {
             .order(
                 'analysis_date',
                 {
-                    ascending: false
+                    ascending:
+                        false
                 }
             )
             .order(
                 'waktu',
                 {
-                    ascending: true
+                    ascending:
+                        true
                 }
             );
 
 
     // ==================================================
-    // JALANKAN QUERY
+    // EXECUTE
     // ==================================================
 
     const {
@@ -434,17 +573,23 @@ async function muatDataTabel() {
     if (error) {
 
         console.error(
-            'SUPABASE ERROR:',
+            'Supabase:',
             error
         );
 
+
+        currentTableData =
+            [];
+
+
         tbody.innerHTML = `
             <tr>
-                <td colspan="8"
+                <td
+                    colspan="8"
                     style="
                         text-align:center;
+                        padding:35px;
                         color:#dc2626;
-                        padding:30px;
                     "
                 >
                     Gagal memuat data:
@@ -453,22 +598,30 @@ async function muatDataTabel() {
             </tr>
         `;
 
+
         return;
     }
 
 
+    currentTableData =
+        Array.isArray(data)
+            ? data
+            : [];
+
+
     if (
-        !data ||
-        data.length === 0
+        currentTableData.length ===
+        0
     ) {
 
         tbody.innerHTML = `
             <tr>
-                <td colspan="8"
+                <td
+                    colspan="8"
                     style="
                         text-align:center;
-                        color:#94a3b8;
                         padding:40px;
+                        color:#94a3b8;
                     "
                 >
                     Belum ada arsip prakiraan BMKG
@@ -477,83 +630,90 @@ async function muatDataTabel() {
             </tr>
         `;
 
+
         return;
     }
 
 
     // ==================================================
-    // TAMPILKAN DATA
+    // RENDER
     // ==================================================
 
-    tbody.innerHTML = '';
+    tbody.innerHTML =
+        '';
 
 
-    data.forEach(row => {
+    currentTableData
+        .forEach(
+            row => {
 
-        const tr =
-            document.createElement(
-                'tr'
-            );
+                const tr =
+                    document.createElement(
+                        'tr'
+                    );
 
-        tr.innerHTML = `
 
-            <td>
-                ${formatWaktuIndonesia(
-                    row.analysis_date
-                )}
-            </td>
+                tr.innerHTML = `
 
-            <td>
-                ${formatWaktuIndonesia(
-                    row.waktu
-                )}
-            </td>
+                    <td>
+                        ${formatWaktuIndonesia(
+                            row.analysis_date
+                        )}
+                    </td>
 
-            <td>
-                <strong>
-                    ${row.kondisi_cuaca || '-'}
-                </strong>
-            </td>
+                    <td>
+                        ${formatWaktuIndonesia(
+                            row.waktu
+                        )}
+                    </td>
 
-            <td>
-                ${tampilNilai(
-                    row.suhu,
-                    ' °C'
-                )}
-            </td>
+                    <td>
+                        <strong>
+                            ${row.kondisi_cuaca || '-'}
+                        </strong>
+                    </td>
 
-            <td>
-                ${tampilNilai(
-                    row.kelembapan,
-                    ' %'
-                )}
-            </td>
+                    <td>
+                        ${tampilNilai(
+                            row.suhu,
+                            ' °C'
+                        )}
+                    </td>
 
-            <td>
-                ${tampilNilai(
-                    row.angin,
-                    ' km/jam'
-                )}
-            </td>
+                    <td>
+                        ${tampilNilai(
+                            row.kelembapan,
+                            ' %'
+                        )}
+                    </td>
 
-            <td>
-                ${tampilNilai(
-                    row.arah_angin
-                )}
-            </td>
+                    <td>
+                        ${tampilNilai(
+                            row.angin,
+                            ' km/jam'
+                        )}
+                    </td>
 
-            <td>
-                ${tampilNilai(
-                    row.curah_hujan,
-                    ' mm'
-                )}
-            </td>
-        `;
+                    <td>
+                        ${tampilNilai(
+                            row.arah_angin
+                        )}
+                    </td>
 
-        tbody.appendChild(
-            tr
+                    <td>
+                        ${tampilNilai(
+                            row.curah_hujan,
+                            ' mm'
+                        )}
+                    </td>
+                `;
+
+
+                tbody.appendChild(
+                    tr
+                );
+            }
         );
-    });
 }
 
 
@@ -561,18 +721,15 @@ async function muatDataTabel() {
 // EVENT FILTER
 // ======================================================
 
-if (filterWilayah) {
-
-    filterWilayah.addEventListener(
+filterWilayah
+    ?.addEventListener(
         'change',
         muatDataTabel
     );
-}
 
 
-if (filterTahun) {
-
-    filterTahun.addEventListener(
+filterTahun
+    ?.addEventListener(
         'change',
         function () {
 
@@ -581,12 +738,10 @@ if (filterTahun) {
             muatDataTabel();
         }
     );
-}
 
 
-if (filterBulan) {
-
-    filterBulan.addEventListener(
+filterBulan
+    ?.addEventListener(
         'change',
         function () {
 
@@ -595,72 +750,643 @@ if (filterBulan) {
             muatDataTabel();
         }
     );
-}
 
 
-if (filterTanggal) {
-
-    filterTanggal.addEventListener(
+filterTanggal
+    ?.addEventListener(
         'change',
         muatDataTabel
     );
-}
 
 
 // ======================================================
-// CETAK PDF
+// PDF
+// SELALU LIGHT / PUTIH
+// A4 LANDSCAPE
+// AUTO PAGINATION
 // ======================================================
 
-if (btnCetakPDF) {
+function cetakPDF() {
 
-    btnCetakPDF.addEventListener(
-        'click',
-        function () {
+    if (
+        !currentTableData ||
+        currentTableData.length === 0
+    ) {
 
-            const area =
-                document.getElementById(
-                    'area-cetak-pdf'
-                );
+        alert(
+            'Belum ada data yang dapat dicetak.'
+        );
 
-            if (!area) {
-                return;
+        return;
+    }
+
+
+    if (
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ) {
+
+        alert(
+            'Library PDF belum berhasil dimuat.'
+        );
+
+        return;
+    }
+
+
+    const {
+        jsPDF
+    } =
+        window.jspdf;
+
+
+    // A4 LANDSCAPE
+    const doc =
+        new jsPDF({
+            orientation:
+                'landscape',
+
+            unit:
+                'mm',
+
+            format:
+                'a4'
+        });
+
+
+    // ==================================================
+    // UKURAN HALAMAN
+    // ==================================================
+
+    const pageWidth =
+        doc.internal
+            .pageSize
+            .getWidth();
+
+
+    const pageHeight =
+        doc.internal
+            .pageSize
+            .getHeight();
+
+
+    // Margin normal A4
+    const marginLeft =
+        12;
+
+    const marginRight =
+        12;
+
+    const marginTop =
+        12;
+
+    const marginBottom =
+        14;
+
+
+    // ==================================================
+    // IDENTITAS
+    // ==================================================
+
+    const wilayahText =
+        filterWilayah
+            ? filterWilayah.options[
+                filterWilayah.selectedIndex
+            ].text
+            : 'Rata-rata Kota Semarang';
+
+
+    const periode =
+        getPeriodeLabel();
+
+
+    const now =
+        new Date();
+
+
+    const tanggalCetak =
+        now.toLocaleString(
+            'id-ID',
+            {
+                timeZone:
+                    'Asia/Jakarta',
+
+                weekday:
+                    'long',
+
+                day:
+                    '2-digit',
+
+                month:
+                    'long',
+
+                year:
+                    'numeric',
+
+                hour:
+                    '2-digit',
+
+                minute:
+                    '2-digit'
             }
+        )
+        .replace(
+            ':',
+            '.'
+        );
 
 
-            html2pdf()
-                .from(area)
-                .set({
+    // ==================================================
+    // HEADER PDF
+    // ==================================================
 
-                    margin:
-                        7,
+    doc.setTextColor(
+        30,
+        41,
+        59
+    );
 
-                    filename:
-                        'Arsip_Prakiraan_Cuaca_Semarang.pdf',
 
-                    image: {
-                        type: 'jpeg',
-                        quality: 0.98
-                    },
+    doc.setFont(
+        'helvetica',
+        'bold'
+    );
 
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true
-                    },
 
-                    jsPDF: {
-                        unit: 'mm',
-                        format: 'a4',
-                        orientation: 'landscape'
-                    }
-                })
-                .save();
+    doc.setFontSize(
+        16
+    );
+
+
+    doc.text(
+        'LAPORAN RIWAYAT PRAKIRAAN CUACA',
+        pageWidth / 2,
+        marginTop + 4,
+        {
+            align:
+                'center'
         }
+    );
+
+
+    doc.setFont(
+        'helvetica',
+        'normal'
+    );
+
+
+    doc.setFontSize(
+        9.5
+    );
+
+
+    doc.setTextColor(
+        71,
+        85,
+        105
+    );
+
+
+    doc.text(
+        'Badan Meteorologi, Klimatologi, dan Geofisika (BMKG)',
+        pageWidth / 2,
+        marginTop + 10,
+        {
+            align:
+                'center'
+        }
+    );
+
+
+    doc.setFontSize(
+        9
+    );
+
+
+    doc.text(
+        `Lokasi: ${wilayahText}`,
+        marginLeft,
+        marginTop + 19
+    );
+
+
+    doc.text(
+        `Periode Arsip: ${periode}`,
+        marginLeft,
+        marginTop + 24
+    );
+
+
+    doc.text(
+        `Dicetak: ${tanggalCetak} WIB`,
+        pageWidth - marginRight,
+        marginTop + 19,
+        {
+            align:
+                'right'
+        }
+    );
+
+
+    doc.setDrawColor(
+        203,
+        213,
+        225
+    );
+
+
+    doc.line(
+        marginLeft,
+        marginTop + 29,
+        pageWidth - marginRight,
+        marginTop + 29
+    );
+
+
+    // ==================================================
+    // DATA PDF
+    // ==================================================
+
+    const body =
+        currentTableData.map(
+            row => [
+
+                formatWaktuIndonesia(
+                    row.analysis_date
+                ),
+
+                formatWaktuIndonesia(
+                    row.waktu
+                ),
+
+                row.kondisi_cuaca
+                    || '-',
+
+                tampilNilai(
+                    row.suhu,
+                    ' °C'
+                ),
+
+                tampilNilai(
+                    row.kelembapan,
+                    ' %'
+                ),
+
+                tampilNilai(
+                    row.angin,
+                    ' km/jam'
+                ),
+
+                tampilNilai(
+                    row.arah_angin
+                ),
+
+                tampilNilai(
+                    row.curah_hujan,
+                    ' mm'
+                )
+            ]
+        );
+
+
+    doc.autoTable({
+
+        startY:
+            marginTop + 34,
+
+
+        margin: {
+
+            left:
+                marginLeft,
+
+            right:
+                marginRight,
+
+            bottom:
+                marginBottom
+        },
+
+
+        head: [[
+
+            'Diterbitkan BMKG',
+
+            'Waktu Prakiraan',
+
+            'Kondisi Cuaca',
+
+            'Suhu',
+
+            'Kelembapan',
+
+            'Angin',
+
+            'Arah Angin',
+
+            'Curah Hujan'
+        ]],
+
+
+        body:
+            body,
+
+
+        theme:
+            'grid',
+
+
+        showHead:
+            'everyPage',
+
+
+        rowPageBreak:
+            'avoid',
+
+
+        styles: {
+
+            font:
+                'helvetica',
+
+            fontSize:
+                8,
+
+            textColor: [
+                51,
+                65,
+                85
+            ],
+
+            lineColor: [
+                203,
+                213,
+                225
+            ],
+
+            lineWidth:
+                0.2,
+
+            cellPadding:
+                2.5,
+
+            valign:
+                'middle',
+
+            overflow:
+                'linebreak'
+        },
+
+
+        headStyles: {
+
+            fillColor: [
+                241,
+                245,
+                249
+            ],
+
+            textColor: [
+                30,
+                41,
+                59
+            ],
+
+            fontStyle:
+                'bold',
+
+            fontSize:
+                8,
+
+            halign:
+                'center',
+
+            valign:
+                'middle',
+
+            minCellHeight:
+                10
+        },
+
+
+        alternateRowStyles: {
+
+            fillColor: [
+                248,
+                250,
+                252
+            ]
+        },
+
+
+        columnStyles: {
+
+            0: {
+                cellWidth: 35
+            },
+
+            1: {
+                cellWidth: 35
+            },
+
+            2: {
+                cellWidth: 38
+            },
+
+            3: {
+                cellWidth: 20,
+                halign: 'center'
+            },
+
+            4: {
+                cellWidth: 24,
+                halign: 'center'
+            },
+
+            5: {
+                cellWidth: 27,
+                halign: 'center'
+            },
+
+            6: {
+                cellWidth: 23,
+                halign: 'center'
+            },
+
+            7: {
+                cellWidth: 27,
+                halign: 'center'
+            }
+        },
+
+
+        // ==================================================
+        // FOOTER SETIAP HALAMAN
+        // ==================================================
+
+        didDrawPage: function () {
+
+            const currentPage =
+                doc.internal
+                    .getCurrentPageInfo()
+                    .pageNumber;
+
+
+            const totalPages =
+                doc.internal
+                    .getNumberOfPages();
+
+
+            doc.setFont(
+                'helvetica',
+                'normal'
+            );
+
+
+            doc.setFontSize(
+                7.5
+            );
+
+
+            doc.setTextColor(
+                100,
+                116,
+                139
+            );
+
+
+            doc.text(
+                'Sumber: BMKG',
+                marginLeft,
+                pageHeight - 7
+            );
+
+
+            doc.text(
+                `Halaman ${currentPage} dari ${totalPages}`,
+                pageWidth - marginRight,
+                pageHeight - 7,
+                {
+                    align:
+                        'right'
+                }
+            );
+        }
+    });
+
+
+    // ==================================================
+    // UPDATE NOMOR TOTAL HALAMAN
+    //
+    // didDrawPage di atas kadang belum mengetahui
+    // jumlah final sampai tabel selesai.
+    // Tambahkan ulang footer nomor halaman.
+    // ==================================================
+
+    const totalPages =
+        doc.internal
+            .getNumberOfPages();
+
+
+    for (
+        let i = 1;
+        i <= totalPages;
+        i++
+    ) {
+
+        doc.setPage(
+            i
+        );
+
+
+        doc.setFontSize(
+            7.5
+        );
+
+
+        doc.setTextColor(
+            100,
+            116,
+            139
+        );
+
+
+        // Tutup nomor halaman lama
+        doc.setFillColor(
+            255,
+            255,
+            255
+        );
+
+
+        doc.rect(
+            pageWidth - 55,
+            pageHeight - 11,
+            45,
+            6,
+            'F'
+        );
+
+
+        doc.text(
+            `Halaman ${i} dari ${totalPages}`,
+            pageWidth - marginRight,
+            pageHeight - 7,
+            {
+                align:
+                    'right'
+            }
+        );
+    }
+
+
+    // ==================================================
+    // FILE NAME
+    // ==================================================
+
+    const safeWilayah =
+        wilayahText
+            .replace(
+                /[^a-zA-Z0-9]+/g,
+                '_'
+            )
+            .replace(
+                /^_+|_+$/g,
+                ''
+            );
+
+
+    const safePeriode =
+        periode
+            .replace(
+                /[^a-zA-Z0-9]+/g,
+                '_'
+            )
+            .replace(
+                /^_+|_+$/g,
+                ''
+            );
+
+
+    doc.save(
+        `Riwayat_Cuaca_${safeWilayah}_${safePeriode}.pdf`
     );
 }
 
 
 // ======================================================
-// START APLIKASI
+// BUTTON PDF
+// ======================================================
+
+btnCetakPDF
+    ?.addEventListener(
+        'click',
+        cetakPDF
+    );
+
+
+// ======================================================
+// START
 // ======================================================
 
 document.addEventListener(
@@ -669,34 +1395,28 @@ document.addEventListener(
 
         try {
 
-            // Pastikan library Supabase benar-benar tersedia
             if (
                 !window.supabase ||
-                typeof window.supabase.createClient !==
+                typeof window
+                    .supabase
+                    .createClient !==
                     'function'
             ) {
 
                 throw new Error(
-                    'Library Supabase tidak ditemukan'
+                    'Library Supabase tidak ditemukan.'
                 );
             }
 
 
             supabaseClient =
-                window.supabase.createClient(
-                    SUPABASE_URL,
-                    SUPABASE_KEY
-                );
+                window.supabase
+                    .createClient(
+                        SUPABASE_URL,
+                        SUPABASE_KEY
+                    );
 
 
-            console.log(
-                '✅ Supabase Riwayat terhubung'
-            );
-
-
-            // Ini yang sebelumnya kurang:
-            // tahun 2026 sudah terpilih sejak awal,
-            // jadi Bulan harus langsung aktif.
             updateFilterState();
 
 
@@ -706,7 +1426,6 @@ document.addEventListener(
         } catch (error) {
 
             console.error(
-                '❌ Gagal inisialisasi:',
                 error
             );
 
@@ -721,15 +1440,14 @@ document.addEventListener(
 
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8"
+                        <td
+                            colspan="8"
                             style="
                                 text-align:center;
+                                padding:35px;
                                 color:#dc2626;
-                                padding:30px;
                             "
                         >
-                            Gagal menghubungkan halaman
-                            Riwayat ke Supabase:
                             ${error.message}
                         </td>
                     </tr>
