@@ -1,21 +1,26 @@
 export default async function handler(req, res) {
 
-    // Hanya izinkan request GET
+    // ======================================================
+    // HANYA IZINKAN GET
+    // ======================================================
+
     if (req.method !== "GET") {
+
         return res.status(405).json({
             success: false,
             error: "Method tidak diizinkan"
         });
     }
 
+
     try {
 
-        // ==========================================
-        // ALAMAT WEBSITE SAAT INI
-        // ==========================================
+        // ======================================================
+        // ALAMAT WEBSITE VERCEL
+        // ======================================================
 
         const protocol =
-            req.headers["x-forwarded-proto"] || "http";
+            req.headers["x-forwarded-proto"] || "https";
 
         const host =
             req.headers.host;
@@ -24,27 +29,27 @@ export default async function handler(req, res) {
             `${protocol}://${host}`;
 
 
-        // ==========================================
-        // BACA GEOJSON KELURAHAN SEMARANG
-        // ==========================================
+        // ======================================================
+        // BACA GEOJSON KELURAHAN
+        // ======================================================
 
         const geojsonUrl =
             `${baseUrl}/data/Kelurahan%20Semarang.geojson`;
 
-        const response =
+        const geojsonResponse =
             await fetch(geojsonUrl);
 
 
-        if (!response.ok) {
+        if (!geojsonResponse.ok) {
 
             throw new Error(
-                `GeoJSON gagal dibaca (${response.status})`
+                `GeoJSON gagal dibaca (${geojsonResponse.status})`
             );
         }
 
 
         const geojson =
-            await response.json();
+            await geojsonResponse.json();
 
 
         if (!Array.isArray(geojson.features)) {
@@ -55,9 +60,9 @@ export default async function handler(req, res) {
         }
 
 
-        // ==========================================
-        // AMBIL DATA KELURAHAN + ADM4
-        // ==========================================
+        // ======================================================
+        // AMBIL DAFTAR KELURAHAN
+        // ======================================================
 
         const daftarKelurahan =
             geojson.features
@@ -80,46 +85,105 @@ export default async function handler(req, res) {
                             ).trim()
                     };
                 })
-
-                // Hanya ambil kelurahan
-                // yang mempunyai kode adm4
                 .filter(item => item.adm4);
 
 
-        // ==========================================
-        // CEK ADM4 UNIK
-        // ==========================================
+        if (daftarKelurahan.length === 0) {
 
-        const adm4Unik =
-            new Set(
-                daftarKelurahan.map(
-                    item => item.adm4
-                )
+            throw new Error(
+                "Tidak ada kelurahan dengan adm4"
             );
+        }
 
 
-        // ==========================================
+        // ======================================================
+        // TEST HANYA 1 KELURAHAN
+        // ======================================================
+
+        const sampleKelurahan =
+            daftarKelurahan[0];
+
+
+        const bmkgUrl =
+            `https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=${encodeURIComponent(
+                sampleKelurahan.adm4
+            )}`;
+
+
+        const bmkgResponse =
+            await fetch(bmkgUrl);
+
+
+        if (!bmkgResponse.ok) {
+
+            throw new Error(
+                `BMKG gagal diakses (${bmkgResponse.status})`
+            );
+        }
+
+
+        const bmkgData =
+            await bmkgResponse.json();
+
+
+        // ======================================================
+        // AMBIL SEMUA PRAKIRAAN DARI RESPONSE BMKG
+        // ======================================================
+
+        const forecasts = [];
+
+
+        if (Array.isArray(bmkgData.data)) {
+
+            bmkgData.data.forEach(group => {
+
+                if (!Array.isArray(group.cuaca)) {
+                    return;
+                }
+
+
+                group.cuaca.forEach(day => {
+
+                    if (!Array.isArray(day)) {
+                        return;
+                    }
+
+
+                    day.forEach(item => {
+
+                        forecasts.push(item);
+
+                    });
+                });
+            });
+        }
+
+
+        // ======================================================
         // HASIL TEST
-        // ==========================================
+        // ======================================================
 
         return res.status(200).json({
 
             success: true,
 
             message:
-                "GeoJSON Kelurahan Semarang berhasil dibaca",
+                "API BMKG berhasil diakses dari backend",
 
-            total_feature:
-                geojson.features.length,
+            kelurahan:
+                sampleKelurahan.kelurahan,
 
-            total_kelurahan_dengan_adm4:
-                daftarKelurahan.length,
+            kecamatan:
+                sampleKelurahan.kecamatan,
 
-            total_adm4_unik:
-                adm4Unik.size,
+            adm4:
+                sampleKelurahan.adm4,
 
-            contoh_data:
-                daftarKelurahan.slice(0, 5)
+            jumlah_prakiraan:
+                forecasts.length,
+
+            contoh_prakiraan:
+                forecasts.slice(0, 3)
 
         });
 
