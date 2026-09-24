@@ -693,3 +693,83 @@ html, body {
     letter-spacing: 0.5px;
     margin-top: 3px;
 }
+/* ======================================================
+   SCROLL TABEL RIWAYAT
+   ====================================================== */
+
+.table-scroll-wrapper {
+    width: 100%;
+    max-height: 520px;
+    overflow-y: auto;
+    overflow-x: auto;
+
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+
+    position: relative;
+}
+
+
+/* Hilangkan border ganda dari tabel */
+.table-scroll-wrapper table {
+    margin-top: 0;
+    width: 100%;
+    min-width: 1050px;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+
+/* Header tetap terlihat ketika scroll ke bawah */
+.table-scroll-wrapper thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    background: #f8fafc;
+    box-shadow: 0 1px 0 #e2e8f0;
+}
+
+
+/* Baris lebih nyaman dibaca */
+.table-scroll-wrapper tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+
+/* Scrollbar */
+.table-scroll-wrapper::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+
+/* Responsive */
+@media (max-width: 900px) {
+
+    .data-container {
+        padding: 15px;
+    }
+
+    .table-card {
+        padding: 20px;
+    }
+
+    .table-scroll-wrapper {
+        max-height: 460px;
+    }
+}
