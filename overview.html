@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overview Cuaca - Kota Semarang</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body class="overview-page-body">
+
+    <!-- =========================
+         NAVBAR
+    ========================== -->
+    <nav class="top-navbar">
+        <div class="nav-left">
+            <div class="brand">
+                <img src="images/Logo_BMKG.png" alt="BMKG" class="brand-logo">
+                <div class="brand-text">
+                    <span class="brand-title">Prakiraan Cuaca</span>
+                    <span class="brand-subtitle">Kota Semarang</span>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="window.location.href='overview.html'" style="cursor:pointer;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                        </path>
+                    </svg>
+                    Overview
+                </button>
+
+                <button class="nav-tab" onclick="window.location.href='index.html'" style="cursor:pointer;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7">
+                        </path>
+                    </svg>
+                    Peta Cuaca
+                </button>
+
+                <button class="nav-tab" onclick="window.location.href='data.html'" style="cursor:pointer;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Riwayat Data
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-center">
+            <div class="overview-page-title-wrap">
+                <span class="overview-page-title">Dashboard Overview Cuaca Semarang</span>
+            </div>
+        </div>
+
+        <div class="nav-right">
+            <div class="nav-clock">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
+                <span id="overviewRealtimeClock">--.-- WIB</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================
+         CONTENT
+    ========================== -->
+    <main class="overview-wrapper">
+        <section class="overview-layout">
+
+            <!-- PANEL KIRI -->
+            <aside class="overview-hero-card">
+                <div class="overview-hero-top">
+                    <div>
+                        <p class="overview-location-label">Kota Semarang</p>
+                        <h2 id="heroTitle" class="overview-location-title">Memuat overview...</h2>
+                        <p id="heroDateText" class="overview-date-text">--</p>
+                    </div>
+                </div>
+
+                <div class="overview-hero-middle">
+                    <div id="heroWeatherIcon" class="hero-weather-icon">☀️</div>
+                    <div id="heroTemp" class="hero-temp">--°</div>
+                    <div id="heroCondition" class="hero-condition">Memuat data...</div>
+                    <div id="heroForecastTime" class="hero-forecast-time">--.-- WIB</div>
+                </div>
+
+                <div class="overview-hero-bottom">
+                    <div class="hero-info-row">
+                        <span>Pembaruan BMKG</span>
+                        <strong id="heroUpdateText">--</strong>
+                    </div>
+                    <div class="hero-info-row">
+                        <span>Slot aktif</span>
+                        <strong id="heroSlotText">- / -</strong>
+                    </div>
+                    <div class="hero-info-row">
+                        <span>Sumber data</span>
+                        <strong>BMKG & Arsip Supabase</strong>
+                    </div>
+                </div>
+
+                <div class="overview-hero-brand">
+                    <img src="images/Logo_BMKG.png" alt="BMKG">
+                </div>
+            </aside>
+
+            <!-- PANEL KANAN -->
+            <section class="overview-main-content">
+                <div class="overview-header-card">
+                    <div>
+                        <h1>Welcome to Overview</h1>
+                        <p>Ringkasan cuaca penting Kota Semarang secara cepat, tanpa mengulang detail peta dan riwayat.</p>
+                    </div>
+                    <div class="overview-status-pill">
+                        <span id="overviewThemeLabel">Mode Otomatis</span>
+                    </div>
+                </div>
+
+                <!-- UPCOMING HOURS -->
+                <div class="overview-panel upcoming-panel">
+                    <div class="panel-header-row">
+                        <div>
+                            <h3>Upcoming Hours</h3>
+                            <p>Prakiraan terdekat berdasarkan arsip BMKG terbaru</p>
+                        </div>
+                    </div>
+
+                    <div id="upcomingHours" class="upcoming-hours-grid"></div>
+                    <svg id="upcomingChart" class="upcoming-chart" viewBox="0 0 760 180" preserveAspectRatio="none"></svg>
+                </div>
+
+                <!-- DETAIL CARDS -->
+                <div class="overview-detail-grid">
+                    <div class="overview-small-card">
+                        <div class="small-card-title-row">
+                            <span>Kelembapan</span>
+                            <span class="small-card-icon">💧</span>
+                        </div>
+                        <div id="humidityValue" class="small-card-value">--%</div>
+                        <div class="small-card-sub">Kondisi kelembapan saat ini</div>
+                    </div>
+
+                    <div class="overview-small-card">
+                        <div class="small-card-title-row">
+                            <span>Angin</span>
+                            <span class="small-card-icon">💨</span>
+                        </div>
+                        <div id="windValue" class="small-card-value">-- km/jam</div>
+                        <div id="windSubValue" class="small-card-sub">Arah: --</div>
+                    </div>
+
+                    <div class="overview-small-card">
+                        <div class="small-card-title-row">
+                            <span>Curah Hujan</span>
+                            <span class="small-card-icon">🌧️</span>
+                        </div>
+                        <div id="rainValue" class="small-card-value">-- mm</div>
+                        <div class="small-card-sub">Prediksi hujan pada slot aktif</div>
+                    </div>
+
+                    <div class="overview-small-card">
+                        <div class="small-card-title-row">
+                            <span>Tutupan Awan</span>
+                            <span class="small-card-icon">☁️</span>
+                        </div>
+                        <div id="cloudValue" class="small-card-value">--%</div>
+                        <div class="small-card-sub">Tingkat tutupan awan</div>
+                    </div>
+
+                    <div class="overview-small-card overview-wide-card">
+                        <div class="small-card-title-row">
+                            <span>Ringkasan Hari Ini</span>
+                            <span class="small-card-icon">📋</span>
+                        </div>
+                        <div id="summaryList" class="overview-list-block">
+                            <div class="overview-list-item">Memuat ringkasan...</div>
+                        </div>
+                    </div>
+
+                    <div class="overview-small-card overview-wide-card">
+                        <div class="small-card-title-row">
+                            <span>Sorotan Kecamatan</span>
+                            <span class="small-card-icon">📍</span>
+                        </div>
+                        <div id="highlightList" class="overview-list-block">
+                            <div class="overview-list-item">Memuat sorotan wilayah...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <!-- TOAST -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- THEME -->
+    <script src="theme.js"></script>
+
+    <!-- OVERVIEW LOGIC -->
+    <script src="overview.js"></script>
+</body>
+</html>
