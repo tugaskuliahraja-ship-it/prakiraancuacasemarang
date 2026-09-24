@@ -70,8 +70,34 @@
                 </button>
                 <div class="dropdown-menu" id="layer-menu">
                     <h4>Pilihan Basemap</h4>
-                    <label><input type="radio" name="basemap" value="esri" checked> Satelit Esri</label>
-                    <label><input type="radio" name="basemap" value="osm"> Standar OSM</label>
+
+<label>
+    <input
+        type="radio"
+        name="basemap"
+        value="auto"
+        checked
+    >
+    OSM Otomatis Light / Dark
+</label>
+
+<label>
+    <input
+        type="radio"
+        name="basemap"
+        value="osm"
+    >
+    Standar OSM
+</label>
+
+<label>
+    <input
+        type="radio"
+        name="basemap"
+        value="esri"
+    >
+    Satelit Esri
+</label>
                     <hr>
                     <h4>Tingkat Administratif</h4>
                     <label><input type="radio" name="admin_level" value="kecamatan" checked> Kecamatan</label>
@@ -184,7 +210,9 @@
 
     <!-- Leaflet JS & App JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js"></script>
+
+    <script src="theme.js"></script>
+<script src="app.js"></script>
 
     <!-- Script sementara untuk animasi dropdown di HTML -->
     <script>
