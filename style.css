@@ -773,3 +773,572 @@ html, body {
         max-height: 460px;
     }
 }
+
+/* ======================================================
+   THEME SYSTEM - LIGHT / DARK
+   Otomatis diatur oleh theme.js
+   ====================================================== */
+
+:root {
+    --theme-bg: #f5f9fc;
+    --theme-card: #ffffff;
+    --theme-card-soft: rgba(255, 255, 255, 0.95);
+
+    --theme-text: #1e293b;
+    --theme-text-sec: #64748b;
+
+    --theme-border: #e2e8f0;
+    --theme-soft: #f1f5f9;
+
+    --theme-highlight: #e3f2fd;
+
+    --theme-shadow:
+        0 8px 30px rgba(15, 23, 42, 0.10);
+}
+
+
+/* ======================================================
+   DARK VARIABLES
+   ====================================================== */
+
+html[data-theme="dark"] {
+
+    --bg: #08111f;
+    --card: #111827;
+    --text: #e5edf7;
+    --text-sec: #94a3b8;
+    --highlight: #172554;
+
+    --theme-bg: #08111f;
+    --theme-card: #111827;
+    --theme-card-soft:
+        rgba(15, 23, 42, 0.94);
+
+    --theme-text: #e5edf7;
+    --theme-text-sec: #94a3b8;
+
+    --theme-border: #334155;
+    --theme-soft: #172033;
+    --theme-highlight: #172554;
+
+    --theme-shadow:
+        0 10px 35px rgba(0, 0, 0, 0.42);
+}
+
+
+/* ======================================================
+   TRANSISI THEME
+   ====================================================== */
+
+body,
+.top-navbar,
+.side-panel,
+.metric-box,
+.f-card,
+#forecast-timeline,
+.dropdown-menu,
+.search-bar,
+.nav-clock,
+.nav-icon-btn,
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip,
+.label-circle {
+
+    transition:
+        background-color .35s ease,
+        color .35s ease,
+        border-color .35s ease,
+        box-shadow .35s ease;
+}
+
+
+/* ======================================================
+   NAVBAR
+   ====================================================== */
+
+html[data-theme="dark"]
+.top-navbar {
+
+    background:
+        rgba(15, 23, 42, 0.97);
+
+    border-bottom:
+        1px solid #334155;
+
+    box-shadow:
+        0 4px 20px rgba(0,0,0,.30);
+}
+
+
+html[data-theme="dark"]
+.brand-title,
+
+html[data-theme="dark"]
+.nav-clock {
+
+    color:
+        var(--theme-text);
+}
+
+
+html[data-theme="dark"]
+.brand-subtitle,
+
+html[data-theme="dark"]
+.nav-tab {
+
+    color:
+        var(--theme-text-sec);
+}
+
+
+html[data-theme="dark"]
+.nav-tab.active {
+
+    color: #ffffff;
+}
+
+
+html[data-theme="dark"]
+.search-bar,
+
+html[data-theme="dark"]
+.nav-clock {
+
+    background:
+        #172033;
+}
+
+
+html[data-theme="dark"]
+.search-bar input {
+
+    color:
+        var(--theme-text);
+}
+
+
+html[data-theme="dark"]
+.search-bar input::placeholder {
+
+    color:
+        #718096;
+}
+
+
+html[data-theme="dark"]
+.nav-icon-btn {
+
+    background:
+        #172554;
+
+    color:
+        #60a5fa;
+}
+
+
+/* ======================================================
+   DROPDOWN
+   ====================================================== */
+
+html[data-theme="dark"]
+.dropdown-menu {
+
+    background:
+        #111827;
+
+    border:
+        1px solid #334155;
+
+    color:
+        #e5edf7;
+
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.45);
+}
+
+
+html[data-theme="dark"]
+.dropdown-menu h4 {
+
+    color:
+        #94a3b8;
+}
+
+
+html[data-theme="dark"]
+.dropdown-menu hr {
+
+    border-color:
+        #334155;
+}
+
+
+/* ======================================================
+   SIDE PANEL
+   ====================================================== */
+
+html[data-theme="dark"]
+.side-panel {
+
+    background:
+        rgba(15, 23, 42, 0.94);
+
+    color:
+        var(--theme-text);
+
+    border:
+        1px solid rgba(71,85,105,.65);
+
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.48);
+}
+
+
+html[data-theme="dark"]
+.panel-header h3,
+
+html[data-theme="dark"]
+.temp-large,
+
+html[data-theme="dark"]
+.forecast-section h4,
+
+html[data-theme="dark"]
+.metric-val,
+
+html[data-theme="dark"]
+.f-temp {
+
+    color:
+        var(--theme-text);
+}
+
+
+html[data-theme="dark"]
+.panel-header p,
+
+html[data-theme="dark"]
+.weather-desc,
+
+html[data-theme="dark"]
+.weather-time,
+
+html[data-theme="dark"]
+.metric-lbl,
+
+html[data-theme="dark"]
+.footer-text,
+
+html[data-theme="dark"]
+.f-day {
+
+    color:
+        var(--theme-text-sec);
+}
+
+
+html[data-theme="dark"]
+.metric-box,
+
+html[data-theme="dark"]
+.f-card {
+
+    background:
+        #172033;
+}
+
+
+html[data-theme="dark"]
+.f-card.active {
+
+    background:
+        #172554;
+
+    border-color:
+        #3b82f6;
+}
+
+
+html[data-theme="dark"]
+.panel-footer {
+
+    border-top-color:
+        #334155;
+}
+
+
+/* ======================================================
+   TIMELINE
+   ====================================================== */
+
+html[data-theme="dark"]
+#forecast-timeline {
+
+    background:
+        rgba(15, 23, 42, 0.94) !important;
+
+    color:
+        #e5edf7;
+
+    border-color:
+        #334155 !important;
+
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.46);
+}
+
+
+html[data-theme="dark"]
+#timeline-date {
+
+    color:
+        #e5edf7;
+}
+
+
+html[data-theme="dark"]
+.timeline-hour,
+html[data-theme="dark"]
+.timeline-item {
+
+    background:
+        #172033;
+
+    color:
+        #e5edf7;
+
+    border-color:
+        #334155;
+}
+
+
+/* ======================================================
+   LABEL CUACA PETA
+   ====================================================== */
+
+html[data-theme="dark"]
+.label-circle {
+
+    background:
+        #111827;
+
+    border-color:
+        #475569;
+
+    box-shadow:
+        0 5px 18px rgba(0,0,0,.55);
+}
+
+
+html[data-theme="dark"]
+.label-temp {
+
+    color:
+        #f8fafc;
+}
+
+
+/* ======================================================
+   LEAFLET POPUP
+   ====================================================== */
+
+html[data-theme="dark"]
+.leaflet-popup-content-wrapper,
+
+html[data-theme="dark"]
+.leaflet-popup-tip {
+
+    background:
+        #111827 !important;
+
+    color:
+        #e5edf7 !important;
+
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.55) !important;
+}
+
+
+html[data-theme="dark"]
+.leaflet-popup-content {
+
+    color:
+        #e5edf7 !important;
+}
+
+
+/*
+   Override inline warna lama di popup
+*/
+html[data-theme="dark"]
+.leaflet-popup-content * {
+
+    color:
+        #e5edf7 !important;
+}
+
+
+html[data-theme="dark"]
+.leaflet-popup-close-button {
+
+    color:
+        #94a3b8 !important;
+}
+
+
+/* ======================================================
+   POPUP PRAKIRAAN 3 HARI
+   ====================================================== */
+
+html[data-theme="dark"]
+.popup-forecast-container {
+
+    background:
+        #172033;
+
+    border-color:
+        #334155;
+
+    box-shadow: none;
+}
+
+
+html[data-theme="dark"]
+.popup-forecast-col {
+
+    border-right-color:
+        #334155;
+}
+
+
+html[data-theme="dark"]
+.p-fc-day,
+
+html[data-theme="dark"]
+.p-fc-date {
+
+    color:
+        #94a3b8 !important;
+}
+
+
+html[data-theme="dark"]
+.p-fc-temp {
+
+    color:
+        #f8fafc !important;
+}
+
+
+/* ======================================================
+   LEAFLET ZOOM CONTROL
+   ====================================================== */
+
+.leaflet-control-zoom {
+
+    border:
+        none !important;
+
+    box-shadow:
+        0 6px 20px rgba(15,23,42,.18) !important;
+}
+
+
+.leaflet-control-zoom a {
+
+    border:
+        none !important;
+
+    width:
+        38px !important;
+
+    height:
+        38px !important;
+
+    line-height:
+        38px !important;
+
+    font-size:
+        20px !important;
+}
+
+
+html[data-theme="dark"]
+.leaflet-control-zoom a {
+
+    background:
+        #111827 !important;
+
+    color:
+        #e5edf7 !important;
+}
+
+
+html[data-theme="dark"]
+.leaflet-control-zoom a:hover {
+
+    background:
+        #1e293b !important;
+}
+
+
+/* ======================================================
+   ATTRIBUTION
+   ====================================================== */
+
+html[data-theme="dark"]
+.leaflet-control-attribution {
+
+    background:
+        rgba(15,23,42,.85) !important;
+
+    color:
+        #94a3b8 !important;
+}
+
+
+html[data-theme="dark"]
+.leaflet-control-attribution a {
+
+    color:
+        #60a5fa !important;
+}
+
+
+/* ======================================================
+   LOADING BMKG
+   ====================================================== */
+
+html[data-theme="dark"]
+#weather-loading {
+
+    background:
+        rgba(2,6,23,.93);
+
+    color:
+        #f8fafc;
+
+    border:
+        1px solid #334155;
+}
+
+/* ======================================================
+   OSM DARK MODE
+   ====================================================== */
+
+.osm-dark-tiles {
+    filter:
+        brightness(0.55)
+        invert(1)
+        contrast(1.15)
+        hue-rotate(180deg)
+        saturate(0.65);
+}
+
+
+/* Tile tetap halus saat theme berubah */
+.leaflet-tile {
+    transition:
+        filter 0.35s ease;
+}
