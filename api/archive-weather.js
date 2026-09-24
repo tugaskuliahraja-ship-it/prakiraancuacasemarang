@@ -134,7 +134,7 @@ export default async function handler(req, res) {
 
         let totalGagal =
             0;
-
+const daftarError = [];
 
         // ======================================================
         // AMBIL BMKG UNTUK SEMUA KELURAHAN
@@ -237,18 +237,25 @@ export default async function handler(req, res) {
                 totalBerhasil++;
 
             }
+catch (error) {
 
-            catch (error) {
+    totalGagal++;
 
-                totalGagal++;
+    if (daftarError.length < 10) {
 
-                console.warn(
-                    "Gagal:",
-                    item.kelurahan,
-                    error.message
-                );
-            }
-        }
+        daftarError.push({
+            kelurahan: item.kelurahan,
+            adm4: item.adm4,
+            error: error.message
+        });
+    }
+
+    console.warn(
+        "Gagal:",
+        item.kelurahan,
+        error.message
+    );
+}
 
 
         // ======================================================
@@ -535,6 +542,9 @@ export default async function handler(req, res) {
 
             request_gagal:
                 totalGagal,
+            
+            contoh_error:
+                daftarError,
 
             total_waktu:
                 dataPerWaktu.size,
