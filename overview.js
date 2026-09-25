@@ -21,6 +21,31 @@ const supabaseClient =
         : null;
 
 
+const OVERVIEW_SESSION_SNAPSHOT_KEY = "bmkg_overview_snapshot_v1";
+
+function readLiveOverviewSnapshot() {
+    try {
+        const raw = sessionStorage.getItem(OVERVIEW_SESSION_SNAPSHOT_KEY);
+        if (!raw) return null;
+
+        const snapshot = JSON.parse(raw);
+
+        if (
+            !snapshot ||
+            !Array.isArray(snapshot.cityRows) ||
+            snapshot.cityRows.length === 0
+        ) {
+            return null;
+        }
+
+        return snapshot;
+    } catch (error) {
+        console.warn("Snapshot Overview tidak dapat dibaca:", error);
+        return null;
+    }
+}
+
+
 // =========================================================
 // 2. STATE
 // =========================================================
@@ -432,7 +457,6 @@ function renderHero() {
     setText("heroWeatherIcon", getWeatherIcon(row.kondisi_cuaca, row.waktu));
     setText("heroTemp", formatTemp(row.suhu));
     setText("heroCondition", safeText(row.kondisi_cuaca, "Tidak diketahui"));
-    setText("heroForecastTime", formatWIBDateTime(row.waktu));
     setText("heroUpdateText", formatWIBDateTime(overviewState.latestAnalysisDate));
     setText(
         "heroSlotText",
@@ -694,7 +718,7 @@ function renderDailySummary() {
         </div>
 
         <div class="overview-list-item">
-            🌧️ Curah hujan tertinggi per slot:
+            🌧️ Curah hujan tertinggi pada prakiraan hari ini:
             <strong>${maximumRain === null ? "--" : formatRain(maximumRain)}</strong>
         </div>
 
@@ -800,32 +824,62 @@ async function loadOverviewData(options = {}) {
             );
         }
 
-        const latestAnalysisDate = await fetchLatestAnalysisDate();
+        const liveSnapshot = readLiveOverviewSnapshot();
 
-        if (!latestAnalysisDate) {
-            throw new Error("Belum ada arsip prakiraan BMKG yang dapat ditampilkan.");
-        }
+        let latestAnalysisDate;
+        let cityRows;
+        let activeIndex;
+        let currentRow;
+        let districtRows;
 
-        const cityRows = await fetchCityForecast(latestAnalysisDate);
+        if (liveSnapshot) {
+            latestAnalysisDate =
+                liveSnapshot.analysisDate ||
+                liveSnapshot.cityRows[0]?.analysis_date ||
+                null;
 
-        if (!cityRows.length) {
-            throw new Error(
-                "Data agregat Kota Semarang (KOTA_SMG) untuk pembaruan terbaru tidak ditemukan."
+            cityRows = liveSnapshot.cityRows;
+
+            activeIndex = cityRows.findIndex(
+                row => row.waktu === liveSnapshot.selectedForecastTime
+            );
+
+            if (activeIndex < 0) {
+                activeIndex = findActiveForecastIndex(cityRows);
+            }
+
+            currentRow = cityRows[activeIndex];
+            districtRows = Array.isArray(liveSnapshot.districtRows)
+                ? liveSnapshot.districtRows
+                : [];
+
+        } else {
+            latestAnalysisDate = await fetchLatestAnalysisDate();
+
+            if (!latestAnalysisDate) {
+                throw new Error("Belum ada arsip prakiraan BMKG yang dapat ditampilkan.");
+            }
+
+            cityRows = await fetchCityForecast(latestAnalysisDate);
+
+            if (!cityRows.length) {
+                throw new Error(
+                    "Data agregat Kota Semarang (KOTA_SMG) untuk pembaruan terbaru tidak ditemukan."
+                );
+            }
+
+            activeIndex = findActiveForecastIndex(cityRows);
+            currentRow = cityRows[activeIndex];
+
+            districtRows = await fetchDistrictForecast(
+                latestAnalysisDate,
+                currentRow.waktu
             );
         }
 
-        const activeIndex = findActiveForecastIndex(cityRows);
-
-        if (activeIndex < 0 || !cityRows[activeIndex]) {
-            throw new Error("Slot prakiraan aktif tidak dapat ditentukan.");
+        if (activeIndex < 0 || !currentRow) {
+            throw new Error("Periode prakiraan aktif tidak dapat ditentukan.");
         }
-
-        const currentRow = cityRows[activeIndex];
-
-        const districtRows = await fetchDistrictForecast(
-            latestAnalysisDate,
-            currentRow.waktu
-        );
 
         overviewState.latestAnalysisDate = latestAnalysisDate;
         overviewState.cityRows = cityRows;
