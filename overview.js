@@ -436,7 +436,7 @@ function renderHero() {
     setText("heroUpdateText", formatWIBDateTime(overviewState.latestAnalysisDate));
     setText(
         "heroSlotText",
-        `${overviewState.currentIndex + 1} / ${overviewState.cityRows.length} slot`
+        formatWIBDateTime(row.waktu)
     );
 }
 
