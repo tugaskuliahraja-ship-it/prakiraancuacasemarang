@@ -656,6 +656,67 @@ const CACHE_DURATION =
     5 * 60 * 1000;
 
 
+const BMKG_SESSION_READY_KEY =
+    "bmkg_session_ready_v1";
+
+const OVERVIEW_SESSION_SNAPSHOT_KEY =
+    "bmkg_overview_snapshot_v1";
+
+
+function isPageReloadNavigation() {
+
+    const navigation =
+        performance
+            .getEntriesByType("navigation")[0];
+
+    return navigation &&
+        navigation.type === "reload";
+}
+
+
+function clearBMKGBrowserCache() {
+
+    const keysToRemove = [];
+
+    for (
+        let index = 0;
+        index < localStorage.length;
+        index++
+    ) {
+
+        const key =
+            localStorage.key(index);
+
+        if (
+            key &&
+            key.startsWith("bmkg_")
+        ) {
+
+            keysToRemove.push(key);
+        }
+    }
+
+    keysToRemove.forEach(
+        key =>
+            localStorage.removeItem(key)
+    );
+
+    sessionStorage.removeItem(
+        BMKG_SESSION_READY_KEY
+    );
+
+    sessionStorage.removeItem(
+        OVERVIEW_SESSION_SNAPSHOT_KEY
+    );
+}
+
+
+if (isPageReloadNavigation()) {
+
+    clearBMKGBrowserCache();
+}
+
+
 let totalWeather = 0;
 let loadedWeather = 0;
 
@@ -1152,9 +1213,17 @@ function getLocalBMKGCache(adm4) {
             Date.now() -
             parsed.timestamp;
 
+        const sessionReady =
+            sessionStorage.getItem(
+                BMKG_SESSION_READY_KEY
+            ) === "1";
+
         if (
-            age < CACHE_DURATION &&
-            parsed.data
+            parsed.data &&
+            (
+                sessionReady ||
+                age < CACHE_DURATION
+            )
         ) {
 
             return parsed.data;
@@ -2885,6 +2954,486 @@ function delay(ms) {
 }
 
 
+
+// ======================================================
+// SNAPSHOT LIVE UNTUK HALAMAN OVERVIEW
+// ======================================================
+
+function bmkgAnalysisDateToISO(value) {
+
+    if (!value) {
+        return null;
+    }
+
+    const text =
+        String(value).trim();
+
+    const hasZone =
+        /(?:Z|[+-]\d{2}:\d{2})$/i
+            .test(text);
+
+    const normalized =
+        hasZone
+            ? text.replace(" ", "T")
+            : text.replace(" ", "T") + "Z";
+
+    const date =
+        new Date(normalized);
+
+    return Number.isNaN(
+        date.getTime()
+    )
+        ? null
+        : date.toISOString();
+}
+
+
+function dominantCounterValue(counter) {
+
+    const keys =
+        Object.keys(counter);
+
+    if (keys.length === 0) {
+        return "--";
+    }
+
+    return keys.reduce(
+        (best, current) =>
+            counter[current] >
+            counter[best]
+                ? current
+                : best
+    );
+}
+
+
+function forecastTimeToWIBISO(time) {
+
+    if (!time) {
+        return null;
+    }
+
+    return time
+        .replace(" ", "T")
+        .replace(
+            /$/,
+            "+07:00"
+        );
+}
+
+
+function aggregateOverviewAtTime(
+    time,
+    includeDistricts = false
+) {
+
+    if (
+        !time ||
+        !layerKelurahan
+    ) {
+        return null;
+    }
+
+    const city = {
+        suhu: 0,
+        kelembapan: 0,
+        angin: 0,
+        tutupan_awan: 0,
+        curah_hujan: 0,
+        countSuhu: 0,
+        countKelembapan: 0,
+        countAngin: 0,
+        countAwan: 0,
+        countHujan: 0,
+        kondisi: {},
+        arah: {},
+        analysisDate: null
+    };
+
+    const districtMap =
+        new Map();
+
+    function getDistrictAccumulator(name) {
+
+        const key =
+            normalizeName(name);
+
+        if (
+            !districtMap.has(key)
+        ) {
+
+            districtMap.set(
+                key,
+                {
+                    name,
+                    suhu: 0,
+                    kelembapan: 0,
+                    angin: 0,
+                    tutupan_awan: 0,
+                    curah_hujan: 0,
+                    countSuhu: 0,
+                    countKelembapan: 0,
+                    countAngin: 0,
+                    countAwan: 0,
+                    countHujan: 0,
+                    kondisi: {},
+                    arah: {},
+                    analysisDate: null
+                }
+            );
+        }
+
+        return districtMap.get(key);
+    }
+
+
+    function addWeather(
+        target,
+        weather
+    ) {
+
+        const t =
+            Number(weather.t);
+
+        const hu =
+            Number(weather.hu);
+
+        const ws =
+            Number(weather.ws);
+
+        const tcc =
+            Number(weather.tcc);
+
+        const tp =
+            Number(weather.tp);
+
+        if (
+            Number.isFinite(t)
+        ) {
+
+            target.suhu += t;
+            target.countSuhu++;
+        }
+
+        if (
+            Number.isFinite(hu)
+        ) {
+
+            target.kelembapan += hu;
+            target.countKelembapan++;
+        }
+
+        if (
+            Number.isFinite(ws)
+        ) {
+
+            target.angin += ws;
+            target.countAngin++;
+        }
+
+        if (
+            Number.isFinite(tcc)
+        ) {
+
+            target.tutupan_awan += tcc;
+            target.countAwan++;
+        }
+
+        if (
+            Number.isFinite(tp)
+        ) {
+
+            target.curah_hujan += tp;
+            target.countHujan++;
+        }
+
+        const desc =
+            weather.weather_desc;
+
+        if (desc) {
+
+            target.kondisi[desc] =
+                (
+                    target.kondisi[desc] ||
+                    0
+                ) + 1;
+        }
+
+        const wd =
+            weather.wd;
+
+        if (wd) {
+
+            target.arah[wd] =
+                (
+                    target.arah[wd] ||
+                    0
+                ) + 1;
+        }
+
+        if (
+            !target.analysisDate &&
+            weather.analysis_date
+        ) {
+
+            target.analysisDate =
+                weather.analysis_date;
+        }
+    }
+
+
+    layerKelurahan.eachLayer(
+        layer => {
+
+            const adm4 =
+                String(
+                    layer.feature
+                        .properties
+                        .adm4 || ""
+                ).trim();
+
+            if (!adm4) {
+                return;
+            }
+
+            const raw =
+                weatherCache.get(adm4);
+
+            if (!raw) {
+                return;
+            }
+
+            const weather =
+                getForecastByTime(
+                    raw,
+                    time
+                );
+
+            if (!weather) {
+                return;
+            }
+
+            addWeather(
+                city,
+                weather
+            );
+
+            if (includeDistricts) {
+
+                const name =
+                    layer.feature
+                        .properties
+                        .Kecamatan ||
+                    "Tidak diketahui";
+
+                addWeather(
+                    getDistrictAccumulator(
+                        name
+                    ),
+                    weather
+                );
+            }
+        }
+    );
+
+
+    if (
+        city.countSuhu === 0
+    ) {
+
+        return null;
+    }
+
+
+    function toRow(
+        target,
+        kode,
+        name,
+        level
+    ) {
+
+        return {
+            kode_wilayah: kode,
+            nama_wilayah: name,
+            tingkat_wilayah: level,
+            analysis_date:
+                bmkgAnalysisDateToISO(
+                    target.analysisDate
+                ),
+            waktu:
+                forecastTimeToWIBISO(
+                    time
+                ),
+            suhu:
+                target.countSuhu
+                    ? Math.round(
+                        target.suhu /
+                        target.countSuhu
+                    )
+                    : null,
+            kelembapan:
+                target.countKelembapan
+                    ? Math.round(
+                        target.kelembapan /
+                        target.countKelembapan
+                    )
+                    : null,
+            angin:
+                target.countAngin
+                    ? Math.round(
+                        target.angin /
+                        target.countAngin
+                    )
+                    : null,
+            arah_angin:
+                dominantCounterValue(
+                    target.arah
+                ),
+            tutupan_awan:
+                target.countAwan
+                    ? Math.round(
+                        target.tutupan_awan /
+                        target.countAwan
+                    )
+                    : null,
+            curah_hujan:
+                target.countHujan
+                    ? Math.round(
+                        (
+                            target.curah_hujan /
+                            target.countHujan
+                        ) * 100
+                    ) / 100
+                    : null,
+            kondisi_cuaca:
+                dominantCounterValue(
+                    target.kondisi
+                )
+        };
+    }
+
+
+    const cityRow =
+        toRow(
+            city,
+            "KOTA_SMG",
+            "Kota Semarang",
+            "KOTA"
+        );
+
+    const districtRows =
+        includeDistricts
+            ? Array.from(
+                districtMap.values()
+            ).map(item => {
+
+                const kode =
+                    "KEC_" +
+                    String(item.name)
+                        .toUpperCase()
+                        .replace(
+                            /\s+/g,
+                            "_"
+                        );
+
+                return toRow(
+                    item,
+                    kode,
+                    item.name,
+                    "KECAMATAN"
+                );
+            })
+            : [];
+
+    return {
+        cityRow,
+        districtRows
+    };
+}
+
+
+function saveOverviewSnapshotToSession() {
+
+    if (
+        !selectedForecastTime ||
+        forecastTimes.length === 0
+    ) {
+        return;
+    }
+
+    const cityRows = [];
+
+    forecastTimes.forEach(
+        time => {
+
+            const result =
+                aggregateOverviewAtTime(
+                    time,
+                    false
+                );
+
+            if (
+                result &&
+                result.cityRow
+            ) {
+
+                cityRows.push(
+                    result.cityRow
+                );
+            }
+        }
+    );
+
+    const currentResult =
+        aggregateOverviewAtTime(
+            selectedForecastTime,
+            true
+        );
+
+    if (
+        cityRows.length === 0 ||
+        !currentResult
+    ) {
+        return;
+    }
+
+    const selectedForecastTimeISO =
+        forecastTimeToWIBISO(
+            selectedForecastTime
+        );
+
+    const snapshot = {
+        version: 1,
+        savedAt: Date.now(),
+        analysisDate:
+            currentResult
+                .cityRow
+                .analysis_date,
+        selectedForecastTime:
+            selectedForecastTimeISO,
+        cityRows,
+        districtRows:
+            currentResult
+                .districtRows
+    };
+
+    try {
+
+        sessionStorage.setItem(
+            OVERVIEW_SESSION_SNAPSHOT_KEY,
+            JSON.stringify(snapshot)
+        );
+
+    } catch (error) {
+
+        console.warn(
+            "Snapshot Overview tidak dapat disimpan:",
+            error
+        );
+    }
+}
+
+
 // ======================================================
 // LOAD CUACA SELURUH KELURAHAN
 // ======================================================
@@ -2936,13 +3485,32 @@ async function loadAllKelurahanWeather() {
             "weather-progress"
         );
 
+    const sameSessionReady =
+        sessionStorage.getItem(
+            BMKG_SESSION_READY_KEY
+        ) === "1";
+
+    const allAvailableFromCache =
+        sameSessionReady &&
+        layers.every(
+            item =>
+                getLocalBMKGCache(
+                    item.adm4
+                ) !== null
+        );
+
     if (loadingBox) {
 
         loadingBox.style.display =
-            "block";
+            allAvailableFromCache
+                ? "none"
+                : "block";
     }
 
-    if (progressText) {
+    if (
+        progressText &&
+        !allAvailableFromCache
+    ) {
 
         progressText.textContent =
             `0/${totalWeather}`;
@@ -3120,7 +3688,22 @@ async function loadAllKelurahanWeather() {
     updateMapForSelectedTime();
     updateBMKGInfoPanel();
 
-    if (loadingBox) {
+    if (
+        failedWeather === 0
+    ) {
+
+        sessionStorage.setItem(
+            BMKG_SESSION_READY_KEY,
+            "1"
+        );
+
+        saveOverviewSnapshotToSession();
+    }
+
+    if (
+        loadingBox &&
+        !allAvailableFromCache
+    ) {
 
         loadingBox.textContent =
             failedWeather === 0
@@ -3137,6 +3720,7 @@ async function loadAllKelurahanWeather() {
     }
 
     if (
+        !allAvailableFromCache &&
         failedWeather === 0
     ) {
 
@@ -3146,7 +3730,10 @@ async function loadAllKelurahanWeather() {
             3200
         );
 
-    } else {
+    } else if (
+        !allAvailableFromCache &&
+        failedWeather > 0
+    ) {
 
         showAppNotification(
             `${totalWeather - failedWeather}/${totalWeather} data kelurahan berhasil dimuat. ${failedWeather} request gagal dan dapat dicoba lagi saat refresh berikutnya.`,
