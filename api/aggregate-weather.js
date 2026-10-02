@@ -458,41 +458,76 @@ export default async function handler(req, res) {
 
 
         // ======================================================
-        // 5. VALIDASI SETIAP SLOT HARUS 177 KELURAHAN
+        // 5. VALIDASI SLOT PRAKIRAAN
+        //
+        // BMKG dapat memberikan horizon awal/akhir yang sedikit
+        // berbeda antar-kelurahan. Slot parsial hanya diabaikan
+        // jika berada di tepi awal/akhir horizon.
+        //
+        // Slot tidak lengkap di tengah horizon tetap dianggap
+        // error agar kehilangan data yang nyata tidak lolos.
         // ======================================================
 
-        const slotStatus =
-            [];
-
-
-        groupMap.forEach(group => {
-
-            slotStatus.push({
-
-                waktu:
-                    group.waktu,
-
-                total_kelurahan:
-                    group.rowsByAdm4.size
-            });
-        });
-
-
-        slotStatus.sort(
-            (a, b) =>
-                new Date(a.waktu) -
-                new Date(b.waktu)
-        );
-
-
-        const slotTidakLengkap =
-            slotStatus.filter(
-                item =>
-                    item.total_kelurahan !== 177
+        const groupsSorted =
+            Array.from(
+                groupMap.values()
+            ).sort(
+                (a, b) =>
+                    new Date(a.waktu) -
+                    new Date(b.waktu)
             );
 
 
-        if (slotTidakLengkap.length > 0) {
+        const slotStatus =
+            groupsSorted.map(
+                group => ({
+
+                    waktu:
+                        group.waktu,
+
+                    total_kelurahan:
+                        group.rowsByAdm4.size,
+
+                    lengkap:
+                        group.rowsByAdm4.size === 177
+                })
+            );
+
+
+        const firstCompleteIndex =
+            slotStatus.findIndex(
+                item =>
+                    item.lengkap
+            );
+
+
+        let lastCompleteIndex =
+            -1;
+
+
+        for (
+            let i =
+                slotStatus.length - 1;
+            i >= 0;
+            i--
+        ) {
+
+            if (
+                slotStatus[i].lengkap
+            ) {
+
+                lastCompleteIndex =
+                    i;
+
+                break;
+            }
+        }
+
+
+        if (
+            firstCompleteIndex === -1 ||
+            lastCompleteIndex === -1
+        ) {
 
             return res.status(409).json({
 
@@ -500,7 +535,7 @@ export default async function handler(req, res) {
                     false,
 
                 error:
-                    "Agregasi dibatalkan karena ada slot yang belum berisi 177 kelurahan.",
+                    "Tidak ada slot prakiraan yang lengkap berisi 177 kelurahan.",
 
                 analysis_date:
                     latestAnalysisDate,
@@ -511,13 +546,70 @@ export default async function handler(req, res) {
                 total_slot:
                     groupMap.size,
 
-                slot_tidak_lengkap:
-                    slotTidakLengkap,
+                semua_slot:
+                    slotStatus
+            });
+        }
+
+
+        const slotTidakLengkapDiTengah =
+            slotStatus
+                .slice(
+                    firstCompleteIndex,
+                    lastCompleteIndex + 1
+                )
+                .filter(
+                    item =>
+                        !item.lengkap
+                );
+
+
+        if (
+            slotTidakLengkapDiTengah.length >
+            0
+        ) {
+
+            return res.status(409).json({
+
+                success:
+                    false,
+
+                error:
+                    "Agregasi dibatalkan karena ada slot tidak lengkap di tengah horizon prakiraan.",
+
+                analysis_date:
+                    latestAnalysisDate,
+
+                total_cache:
+                    cacheData.length,
+
+                total_slot:
+                    groupMap.size,
+
+                slot_tidak_lengkap_di_tengah:
+                    slotTidakLengkapDiTengah,
 
                 semua_slot:
                     slotStatus
             });
         }
+
+
+        const groupsLengkap =
+            groupsSorted.slice(
+                firstCompleteIndex,
+                lastCompleteIndex + 1
+            );
+
+
+        const slotDiabaikan =
+            slotStatus.filter(
+                (_, index) =>
+                    index <
+                        firstCompleteIndex ||
+                    index >
+                        lastCompleteIndex
+            );
 
 
         // ======================================================
@@ -527,7 +619,7 @@ export default async function handler(req, res) {
         const hasilAgregasi = [];
 
 
-        groupMap.forEach(group => {
+        groupsLengkap.forEach(group => {
 
             const rows =
                 Array.from(
@@ -653,7 +745,7 @@ export default async function handler(req, res) {
 
 
         const expectedRecords =
-            groupMap.size * 17;
+            groupsLengkap.length * 17;
 
 
         if (
@@ -731,6 +823,9 @@ export default async function handler(req, res) {
                 cacheData.length,
 
             total_waktu:
+                groupsLengkap.length,
+
+            total_slot_ditemukan:
                 groupMap.size,
 
             total_wilayah:
@@ -744,6 +839,9 @@ export default async function handler(req, res) {
 
             kelurahan_per_slot:
                 slotStatus,
+
+            slot_diabaikan:
+                slotDiabaikan,
 
             contoh_data:
                 hasilAgregasi.slice(
